@@ -258,22 +258,25 @@
         dayDisplay.className = 'event-days';
         dayDisplay.textContent = `${dayCount} day${dayCount !== 1 ? 's' : ''}`;
     
-        // Refresh button
+        // Refresh button using clock symbol for resetting time
         const refreshBtn = document.createElement('button');
         refreshBtn.className = 'btn btn-refresh';
-        refreshBtn.textContent = 'Refresh';
+        refreshBtn.textContent = '⏰';
+        refreshBtn.title = 'Reset Time';
         refreshBtn.addEventListener('click', () => refreshEvent(originalIndex));
     
         // Delete button
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-delete';
-        deleteBtn.textContent = 'Delete';
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.title = 'Delete';
         deleteBtn.addEventListener('click', () => deleteEvent(originalIndex));
     
         // Edit button
         const editBtn = document.createElement('button');
         editBtn.className = 'btn btn-edit';
-        editBtn.textContent = 'Edit';
+        editBtn.textContent = '✏️';
+        editBtn.title = 'Edit';
         editBtn.addEventListener('click', () => editEvent(originalIndex));
     
         // Left arrow button for reordering
