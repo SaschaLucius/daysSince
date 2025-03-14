@@ -1,625 +1,696 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Days Since Last Happened</title>
-  <style>
-    :root {
-      --primary-color: #007bff;
-      --success-color: #28a745;
-      --danger-color: #dc3545;
-      --neutral-color: #6c757d;
-      
-      --bg-color: #f9f9f9;
-      --font-family: 'Arial', sans-serif;
-      --text-color: #333;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Days Since Last Happened</title>
+    <style>
+      :root {
+        --primary-color: #007bff;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --neutral-color: #6c757d;
 
-    body {
-      font-family: var(--font-family);
-      margin: 1.25rem;
-      font-size: 16px;
-      color: var(--text-color);
-      background-color: #fff;
-    }
+        --bg-color: #f9f9f9;
+        --font-family: "Arial", sans-serif;
+        --text-color: #333;
+      }
 
-    h1 {
-      text-align: center;
-      font-size: 2rem;
-      margin-bottom: 1.5rem;
-    }
-
-    #controls {
-      text-align: center;
-      margin-bottom: 1.25rem;
-    }
-
-    .add-form input[type="text"] {
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 0.25rem;
-      font-size: 1rem;
-    }
-
-    .add-form button {
-      background-color: var(--primary-color);
-      color: #fff;
-      border: none;
-      border-radius: 0.25rem;
-      padding: 0.5rem 1rem;
-      margin-left: 0.5rem;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.2s ease;
-    }
-
-    #gridConfigForm {
-      display: inline-block;
-      margin-left: 1rem;
-    }
-
-    #gridConfigForm input[type="number"] {
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 0.25rem;
-      font-size: 1rem;
-      width: 60px;
-      margin-left: 0.5rem;
-    }
-
-    #sortOptions {
-      text-align: center;
-      margin-top: 0.5rem;
-    }
-
-    #eventGrid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .event-box {
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      border: 1px solid #ccc;
-      border-radius: 0.375rem;
-      background-color: var(--bg-color);
-      padding: 1rem;
-      text-align: center;
-      position: relative;
-      transition: border 0.3s ease, box-shadow 0.3s ease;
-      box-sizing: border-box;
-      overflow-wrap: break-word;
-      word-wrap: break-word;
-    }
-
-    .event-title {
-      font-weight: normal;
-      font-size: 1rem; /* reduced from 1.25rem */
-      color: var(--text-color);
-      opacity: 0.7; /* less emphasis */
-      white-space: normal;
-      word-break: break-all;
-    }
-
-    .event-days {
-      font-size: 2rem; /* increased size for highlighting */
-      font-weight: bold;
-      color: var(--text-color);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .button-container {
-      text-align: center;
-    }
-
-    .btn {
-      cursor: pointer;
-      border: none;
-      border-radius: 0.25rem;
-      padding: 0.5rem 0.75rem;
-      margin: 0 0.3125rem;
-      font-size: 1rem;
-      transition: background-color 0.2s ease, transform 0.2s ease;
-    }
-
-    .btn:hover {
-      transform: scale(1.05);
-    }
-
-    .btn-refresh {
-      background-color: var(--success-color);
-      color: #fff;
-    }
-
-    .btn-delete {
-      background-color: var(--danger-color);
-      color: #fff;
-    }
-
-    .btn-edit {
-      background-color: var(--primary-color);
-      color: #fff;
-    }
-
-    .btn-move-left,
-    .btn-move-right {
-      background-color: var(--neutral-color);
-      color: #fff;
-    }
-
-    .alert {
-      animation: pulsate 1.5s infinite;
-      border: 2px solid red;
-    }
-
-    @keyframes pulsate {
-      0% { box-shadow: 0 0 5px red; }
-      50% { box-shadow: 0 0 15px red; }
-      100% { box-shadow: 0 0 5px red; }
-    }
-
-    @media (max-width: 600px) {
       body {
-        font-size: 14px;
+        font-family: var(--font-family);
+        margin: 1.25rem;
+        font-size: 16px;
+        color: var(--text-color);
+        background-color: #fff;
       }
+
       h1 {
-        font-size: 1.75rem;
+        text-align: center;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
       }
-      .event-title {
+
+      #controls {
+        text-align: center;
+        margin-bottom: 1.25rem;
+      }
+
+      .add-form input[type="text"] {
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 0.25rem;
         font-size: 1rem;
       }
+
+      .add-form button {
+        background-color: var(--primary-color);
+        color: #fff;
+        border: none;
+        border-radius: 0.25rem;
+        padding: 0.5rem 1rem;
+        margin-left: 0.5rem;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.2s ease;
+      }
+
+      #gridConfigForm {
+        display: inline-block;
+        margin-left: 1rem;
+      }
+
+      #gridConfigForm input[type="number"] {
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 0.25rem;
+        font-size: 1rem;
+        width: 60px;
+        margin-left: 0.5rem;
+      }
+
+      #sortOptions {
+        text-align: center;
+        margin-top: 0.5rem;
+      }
+
+      #eventGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .event-box {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        border: 1px solid #ccc;
+        border-radius: 0.375rem;
+        background-color: var(--bg-color);
+        padding: 1rem;
+        text-align: center;
+        position: relative;
+        transition: border 0.3s ease, box-shadow 0.3s ease;
+        box-sizing: border-box;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+      }
+
+      .event-title {
+        font-weight: normal;
+        font-size: 1rem; /* reduced from 1.25rem */
+        color: var(--text-color);
+        opacity: 0.7; /* less emphasis */
+        white-space: normal;
+        word-break: break-all;
+      }
+
       .event-days {
-        font-size: 0.875rem;
+        font-size: 2rem; /* increased size for highlighting */
+        font-weight: bold;
+        color: var(--text-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
-    }
-  </style>
-</head>
-<body>
-  <h1>Days Since These Events Last Happened</h1>
 
-  <!-- Controls for adding a new event -->
-  <div id="controls">
-    <form class="add-form" onsubmit="addEvent(event)">
-      <input type="text" id="newEventName" placeholder="Event name" required />
-      <button type="submit">Add Event</button>
-    </form>
-
-    <!-- NEW: Share All button -->
-    <button id="shareAllBtn" class="btn btn-shareAll" onclick="shareAllEvents()">Share All</button>
-
-    <!-- Grid Configuration Form -->
-    <form id="gridConfigForm" class="config-form">
-      <label for="gridCols">Columns:</label>
-      <input type="number" id="gridCols" placeholder="Columns" min="1" required />
-    </form>
-  </div>
-
-  <!-- Add the sorting checkbox below the Grid Configuration Form -->
-  <div id="sortOptions" style="text-align:center; margin-top:0.5rem;">
-    <label>
-      <input type="checkbox" id="sortOldest" /> Sort oldest on top
-    </label>
-  </div>
-
-  <!-- Grid container for events -->
-  <div id="eventGrid"></div>
-
-  <script>
-    // Local Storage Key
-    const STORAGE_KEY = 'daysSinceEvents';
-
-    // Load events from localStorage or create an empty array if none exist
-    let events = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    let editingIndex = null; // <-- added global variable
-
-    // Helper function: Calculate difference in days between now and a given date
-    function daysSince(dateString) {
-      const now = new Date();
-      const past = new Date(dateString);
-      const diffInMs = now - past;
-      // Convert milliseconds to days (rounded down)
-      return Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-    }
-
-    // New helper function: return white if background is dark, else black
-    function getFontColor(bgColor) {
-      if (bgColor[0] === '#') {
-        bgColor = bgColor.slice(1);
+      .button-container {
+        text-align: center;
       }
-      if (bgColor.length === 3) {
-        bgColor = bgColor.split('').map(c => c + c).join('');
-      }
-      const r = parseInt(bgColor.substring(0, 2), 16);
-      const g = parseInt(bgColor.substring(2, 4), 16);
-      const b = parseInt(bgColor.substring(4, 6), 16);
-      // Calculate brightness (standard luminance formula)
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-      return brightness < 128 ? '#ffffff' : '#000000';
-    }
 
-    // Updated renderEvents: if the sort checkbox is checked, display events sorted by lastUpdated (oldest first)
-    // Updated renderEvents: add pulsating border if alertDays is set and reached
-    function renderEvents() {
-      const eventGrid = document.getElementById('eventGrid');
-      eventGrid.innerHTML = '';
-      
-      // Build a list of events with their original index
-      let displayEvents = events.map((ev, i) => ({ ev, index: i }));
-      const sortCheckbox = document.getElementById('sortOldest');
-      if (sortCheckbox && sortCheckbox.checked) {
-        displayEvents.sort((a, b) => new Date(a.ev.lastUpdated) - new Date(b.ev.lastUpdated));
+      .btn {
+        cursor: pointer;
+        border: none;
+        border-radius: 0.25rem;
+        padding: 0.5rem 0.75rem;
+        margin: 0 0.3125rem;
+        font-size: 1rem;
+        transition: background-color 0.2s ease, transform 0.2s ease;
       }
-      
-      displayEvents.forEach(item => {
-        const ev = item.ev;
-        const originalIndex = item.index;
-        const dayCount = daysSince(ev.lastUpdated);
-        const box = document.createElement('div');
-        box.className = 'event-box';
-        const bgColor = ev.bgColor || '#f9f9f9';
-        box.style.backgroundColor = bgColor;
-        const fontColor = getFontColor(bgColor);
-        // Set color on container (may be inherited unless overridden)
-        box.style.color = fontColor;
-        
-        // If alertDays is set and reached, add pulsating animation
-        if ((ev.alertDays !== undefined && dayCount >= ev.alertDays) || (ev.alertMinDays !== undefined && dayCount < ev.alertMinDays)) {
-          box.classList.add('alert');
+
+      .btn:hover {
+        transform: scale(1.05);
+      }
+
+      .btn-refresh {
+        background-color: var(--success-color);
+        color: #fff;
+      }
+
+      .btn-delete {
+        background-color: var(--danger-color);
+        color: #fff;
+      }
+
+      .btn-edit {
+        background-color: var(--primary-color);
+        color: #fff;
+      }
+
+      .btn-move-left,
+      .btn-move-right {
+        background-color: var(--neutral-color);
+        color: #fff;
+      }
+
+      .alert {
+        animation: pulsate 1.5s infinite;
+        border: 2px solid red;
+      }
+
+      @keyframes pulsate {
+        0% {
+          box-shadow: 0 0 5px red;
         }
-        
-        const title = document.createElement('div');
-        title.className = 'event-title';
-        title.textContent = ev.name;
-        // Apply inline color here to override CSS
-        title.style.color = fontColor;
-    
-        const dayDisplay = document.createElement('div');
-        dayDisplay.className = 'event-days';
-        dayDisplay.textContent = `${dayCount} day${dayCount !== 1 ? 's' : ''}`;
-        // Apply inline color here to override CSS
-        dayDisplay.style.color = fontColor;
-    
-        // Create a container for the buttons
-        const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'button-container';
-    
-        // Refresh button using clock symbol for resetting time
-        const refreshBtn = document.createElement('button');
-        refreshBtn.className = 'btn btn-refresh';
-        refreshBtn.textContent = '⏰';
-        refreshBtn.title = 'Reset Time';
-        refreshBtn.addEventListener('click', () => refreshEvent(originalIndex));
-    
-        // Delete button
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-delete';
-        deleteBtn.textContent = '🗑️';
-        deleteBtn.title = 'Delete';
-        deleteBtn.addEventListener('click', () => deleteEvent(originalIndex));
-    
-        // Edit button
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn btn-edit';
-        editBtn.textContent = '✏️';
-        editBtn.title = 'Edit';
-        editBtn.addEventListener('click', () => editEvent(originalIndex));
-    
-        // Left arrow button for reordering
-        const leftArrow = document.createElement('button');
-        leftArrow.className = 'btn btn-move-left';
-        leftArrow.textContent = '←';
-        leftArrow.addEventListener('click', () => moveEventLeft(originalIndex));
-    
-        // Right arrow button for reordering
-        const rightArrow = document.createElement('button');
-        rightArrow.className = 'btn btn-move-right';
-        rightArrow.textContent = '→';
-        rightArrow.addEventListener('click', () => moveEventRight(originalIndex));
-    
-        // Append buttons to the button container
-        buttonContainer.appendChild(refreshBtn);
-        buttonContainer.appendChild(deleteBtn);
-        buttonContainer.appendChild(editBtn);
-        
-        // Only show the reorder arrows if "Sort oldest on top" is not enabled.
-        if (!sortCheckbox.checked) {
-          buttonContainer.appendChild(leftArrow);
-          buttonContainer.appendChild(rightArrow);
+        50% {
+          box-shadow: 0 0 15px red;
+        }
+        100% {
+          box-shadow: 0 0 5px red;
+        }
+      }
+
+      @media (max-width: 600px) {
+        body {
+          font-size: 14px;
+        }
+        h1 {
+          font-size: 1.75rem;
+        }
+        .event-title {
+          font-size: 1rem;
+        }
+        .event-days {
+          font-size: 0.875rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Days Since These Events Last Happened</h1>
+
+    <!-- Controls for adding a new event -->
+    <div id="controls">
+      <form class="add-form" onsubmit="addEvent(event)">
+        <input
+          type="text"
+          id="newEventName"
+          placeholder="Event name"
+          required
+        />
+        <button type="submit">Add Event</button>
+      </form>
+
+      <!-- NEW: Share All button -->
+      <button
+        id="shareAllBtn"
+        class="btn btn-shareAll"
+        onclick="shareAllEvents()"
+      >
+        Share All
+      </button>
+
+      <!-- Grid Configuration Form -->
+      <form id="gridConfigForm" class="config-form">
+        <label for="gridCols">Columns:</label>
+        <input
+          type="number"
+          id="gridCols"
+          placeholder="Columns"
+          min="1"
+          required
+        />
+      </form>
+    </div>
+
+    <!-- Add the sorting checkbox below the Grid Configuration Form -->
+    <div id="sortOptions" style="text-align: center; margin-top: 0.5rem">
+      <label>
+        <input type="checkbox" id="sortOldest" /> Sort oldest on top
+      </label>
+    </div>
+
+    <!-- Grid container for events -->
+    <div id="eventGrid"></div>
+
+    <script>
+      // Local Storage Key
+      const STORAGE_KEY = "daysSinceEvents";
+
+      // Load events from localStorage or create an empty array if none exist
+      let events = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      let editingIndex = null; // <-- added global variable
+
+      // Helper function: Calculate difference in days between now and a given date
+      function daysSince(dateString) {
+        const now = new Date();
+        const past = new Date(dateString);
+        const diffInMs = now - past;
+        // Convert milliseconds to days (rounded down)
+        return Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+      }
+
+      // New helper function: return white if background is dark, else black
+      function getFontColor(bgColor) {
+        if (bgColor[0] === "#") {
+          bgColor = bgColor.slice(1);
+        }
+        if (bgColor.length === 3) {
+          bgColor = bgColor
+            .split("")
+            .map((c) => c + c)
+            .join("");
+        }
+        const r = parseInt(bgColor.substring(0, 2), 16);
+        const g = parseInt(bgColor.substring(2, 4), 16);
+        const b = parseInt(bgColor.substring(4, 6), 16);
+        // Calculate brightness (standard luminance formula)
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128 ? "#ffffff" : "#000000";
+      }
+
+      // Updated renderEvents: if the sort checkbox is checked, display events sorted by lastUpdated (oldest first)
+      // Updated renderEvents: add pulsating border if alertDays is set and reached
+      function renderEvents() {
+        const eventGrid = document.getElementById("eventGrid");
+        eventGrid.innerHTML = "";
+
+        // Build a list of events with their original index
+        let displayEvents = events.map((ev, i) => ({ ev, index: i }));
+        const sortCheckbox = document.getElementById("sortOldest");
+        if (sortCheckbox && sortCheckbox.checked) {
+          displayEvents.sort(
+            (a, b) => new Date(a.ev.lastUpdated) - new Date(b.ev.lastUpdated)
+          );
         }
 
-        // NEW: Add share button
-        const shareBtn = document.createElement('button');
-        shareBtn.className = 'btn btn-share';
-        shareBtn.textContent = '🔗';
-        shareBtn.title = 'Share';
-        shareBtn.addEventListener('click', () => shareEvent(originalIndex));
-        buttonContainer.appendChild(shareBtn);
-    
-        // Append elements in order: title, day count, button container
-        box.appendChild(title);
-        box.appendChild(dayDisplay);
-        box.appendChild(buttonContainer);
-    
-        eventGrid.appendChild(box);
-      });
-    }
-    
-    // React to changes in the sort checkbox to update the display immediately.
-    document.getElementById('sortOldest').addEventListener('change', renderEvents);
+        displayEvents.forEach((item) => {
+          const ev = item.ev;
+          const originalIndex = item.index;
+          const dayCount = daysSince(ev.lastUpdated);
+          const box = document.createElement("div");
+          box.className = "event-box";
+          const bgColor = ev.bgColor || "#f9f9f9";
+          box.style.backgroundColor = bgColor;
+          const fontColor = getFontColor(bgColor);
+          // Set color on container (may be inherited unless overridden)
+          box.style.color = fontColor;
 
-    // Save events array to localStorage
-    function saveEvents() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
-    }
+          // If alertDays is set and reached, add pulsating animation
+          if (
+            (ev.alertDays !== undefined && dayCount >= ev.alertDays) ||
+            (ev.alertMinDays !== undefined && dayCount < ev.alertMinDays)
+          ) {
+            box.classList.add("alert");
+          }
 
-    // Add a new event (sets its 'lastUpdated' to now)
-    function addEvent(e) {
-      e.preventDefault(); // Prevent page refresh
-      const input = document.getElementById('newEventName');
-      const eventName = input.value.trim();
-      if (!eventName) return;
+          const title = document.createElement("div");
+          title.className = "event-title";
+          title.textContent = ev.name;
+          // Apply inline color here to override CSS
+          title.style.color = fontColor;
 
-      events.push({
-        name: eventName,
-        lastUpdated: new Date().toISOString()
-      });
-      saveEvents();
-      renderEvents();
-      input.value = ''; // Clear the input
-    }
+          const dayDisplay = document.createElement("div");
+          dayDisplay.className = "event-days";
+          dayDisplay.textContent = `${dayCount} day${
+            dayCount !== 1 ? "s" : ""
+          }`;
+          // Apply inline color here to override CSS
+          dayDisplay.style.color = fontColor;
 
-    // Refresh an event (set 'lastUpdated' to now)
-    function refreshEvent(index) {
-      events[index].lastUpdated = new Date().toISOString();
-      saveEvents();
-      renderEvents();
-    }
+          // Create a container for the buttons
+          const buttonContainer = document.createElement("div");
+          buttonContainer.className = "button-container";
 
-    // Delete an event
-    function deleteEvent(index) {
-      events.splice(index, 1);
-      saveEvents();
-      renderEvents();
-    }
+          // Refresh button using clock symbol for resetting time
+          const refreshBtn = document.createElement("button");
+          refreshBtn.className = "btn btn-refresh";
+          refreshBtn.textContent = "⏰";
+          refreshBtn.title = "Reset Time";
+          refreshBtn.addEventListener("click", () =>
+            refreshEvent(originalIndex)
+          );
 
-    // In editEvent, add a color input for background and store it in the event object
-    // Updated editEvent: add input for alert days
-    // In editEvent, warn if another element is currently being edited
-    function editEvent(index) {
-      if (editingIndex !== null && editingIndex !== index) {
-        alert("Finish editing the current element before editing another.");
-        return;
+          // Delete button
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "btn btn-delete";
+          deleteBtn.textContent = "🗑️";
+          deleteBtn.title = "Delete";
+          deleteBtn.addEventListener("click", () => deleteEvent(originalIndex));
+
+          // Edit button
+          const editBtn = document.createElement("button");
+          editBtn.className = "btn btn-edit";
+          editBtn.textContent = "✏️";
+          editBtn.title = "Edit";
+          editBtn.addEventListener("click", () => editEvent(originalIndex));
+
+          // Left arrow button for reordering
+          const leftArrow = document.createElement("button");
+          leftArrow.className = "btn btn-move-left";
+          leftArrow.textContent = "←";
+          leftArrow.addEventListener("click", () =>
+            moveEventLeft(originalIndex)
+          );
+
+          // Right arrow button for reordering
+          const rightArrow = document.createElement("button");
+          rightArrow.className = "btn btn-move-right";
+          rightArrow.textContent = "→";
+          rightArrow.addEventListener("click", () =>
+            moveEventRight(originalIndex)
+          );
+
+          // Append buttons to the button container
+          buttonContainer.appendChild(refreshBtn);
+          buttonContainer.appendChild(deleteBtn);
+          buttonContainer.appendChild(editBtn);
+
+          // Only show the reorder arrows if "Sort oldest on top" is not enabled.
+          if (!sortCheckbox.checked) {
+            buttonContainer.appendChild(leftArrow);
+            buttonContainer.appendChild(rightArrow);
+          }
+
+          // NEW: Add share button
+          const shareBtn = document.createElement("button");
+          shareBtn.className = "btn btn-share";
+          shareBtn.textContent = "🔗";
+          shareBtn.title = "Share";
+          shareBtn.addEventListener("click", () => shareEvent(originalIndex));
+          buttonContainer.appendChild(shareBtn);
+
+          // Append elements in order: title, day count, button container
+          box.appendChild(title);
+          box.appendChild(dayDisplay);
+          box.appendChild(buttonContainer);
+
+          eventGrid.appendChild(box);
+        });
       }
-      editingIndex = index;
 
-      const ev = events[index];
-      const eventGrid = document.getElementById('eventGrid');
-      const box = eventGrid.children[index];
-      box.innerHTML = '';  
-      const form = document.createElement('form');
-      form.onsubmit = function(e) {
-        e.preventDefault();
-        const newName = nameInput.value.trim();
-        const newDatetime = dateInput.value;
-        const newBgColor = colorInput.value;
-        const newAlert = alertInput.value.trim();
-        const newMinAlert = minAlertInput.value.trim();
-        if(newName && newDatetime) {
-          events[index].name = newName;
-          events[index].lastUpdated = new Date(newDatetime).toISOString();
-          events[index].bgColor = newBgColor;
-          events[index].alertDays = newAlert ? parseInt(newAlert) : undefined;
-          events[index].alertMinDays = newMinAlert ? parseInt(newMinAlert) : undefined;
-          saveEvents();
+      // React to changes in the sort checkbox to update the display immediately.
+      document
+        .getElementById("sortOldest")
+        .addEventListener("change", renderEvents);
+
+      // Save events array to localStorage
+      function saveEvents() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+      }
+
+      // Add a new event (sets its 'lastUpdated' to now)
+      function addEvent(e) {
+        e.preventDefault(); // Prevent page refresh
+        const input = document.getElementById("newEventName");
+        const eventName = input.value.trim();
+        if (!eventName) return;
+
+        events.push({
+          name: eventName,
+          lastUpdated: new Date().toISOString(),
+        });
+        saveEvents();
+        renderEvents();
+        input.value = ""; // Clear the input
+      }
+
+      // Refresh an event (set 'lastUpdated' to now)
+      function refreshEvent(index) {
+        events[index].lastUpdated = new Date().toISOString();
+        saveEvents();
+        renderEvents();
+      }
+
+      // Delete an event
+      function deleteEvent(index) {
+        events.splice(index, 1);
+        saveEvents();
+        renderEvents();
+      }
+
+      // In editEvent, add a color input for background and store it in the event object
+      // Updated editEvent: add input for alert days
+      // In editEvent, warn if another element is currently being edited
+      function editEvent(index) {
+        if (editingIndex !== null && editingIndex !== index) {
+          alert("Finish editing the current element before editing another.");
+          return;
+        }
+        editingIndex = index;
+
+        const ev = events[index];
+        const eventGrid = document.getElementById("eventGrid");
+        const box = eventGrid.children[index];
+        box.innerHTML = "";
+        const form = document.createElement("form");
+        form.onsubmit = function (e) {
+          e.preventDefault();
+          const newName = nameInput.value.trim();
+          const newDatetime = dateInput.value;
+          const newBgColor = colorInput.value;
+          const newAlert = alertInput.value.trim();
+          const newMinAlert = minAlertInput.value.trim();
+          if (newName && newDatetime) {
+            events[index].name = newName;
+            events[index].lastUpdated = new Date(newDatetime).toISOString();
+            events[index].bgColor = newBgColor;
+            events[index].alertDays = newAlert ? parseInt(newAlert) : undefined;
+            events[index].alertMinDays = newMinAlert
+              ? parseInt(newMinAlert)
+              : undefined;
+            saveEvents();
+            renderEvents();
+            editingIndex = null;
+          }
+        };
+
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.value = ev.name;
+        nameInput.required = true;
+        nameInput.style.marginRight = "5px";
+
+        const dateInput = document.createElement("input");
+        dateInput.type = "datetime-local";
+        let localDate = new Date(ev.lastUpdated);
+        let tzOffset = localDate.getTimezoneOffset() * 60000;
+        let localISO = new Date(localDate - tzOffset)
+          .toISOString()
+          .slice(0, 16);
+        dateInput.value = localISO;
+        dateInput.required = true;
+        dateInput.style.marginRight = "5px";
+
+        // New input for background color (type color shows a color picker)
+        const colorInput = document.createElement("input");
+        colorInput.type = "color";
+        colorInput.value = ev.bgColor || "#f9f9f9";
+        colorInput.required = true;
+        colorInput.style.marginRight = "5px";
+
+        const alertInput = document.createElement("input");
+        alertInput.type = "number";
+        alertInput.placeholder = "Max Alert days";
+        alertInput.value = ev.alertDays !== undefined ? ev.alertDays : "";
+        alertInput.min = "0";
+        alertInput.style.marginRight = "5px";
+
+        // NEW: Input for minimum alert days
+        const minAlertInput = document.createElement("input");
+        minAlertInput.type = "number";
+        minAlertInput.placeholder = "Min Alert days";
+        minAlertInput.value =
+          ev.alertMinDays !== undefined ? ev.alertMinDays : "";
+        minAlertInput.min = "0";
+        minAlertInput.style.marginRight = "5px";
+
+        const updateBtn = document.createElement("button");
+        updateBtn.type = "submit";
+        updateBtn.textContent = "Update";
+        updateBtn.className = "btn btn-edit";
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.type = "button";
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.className = "btn btn-delete";
+        cancelBtn.style.marginLeft = "5px";
+        cancelBtn.addEventListener("click", () => {
+          editingIndex = null; // reset editing flag on cancel
           renderEvents();
-          editingIndex = null;
+        });
+
+        form.appendChild(nameInput);
+        form.appendChild(dateInput);
+        form.appendChild(colorInput);
+        form.appendChild(minAlertInput);
+        form.appendChild(alertInput);
+        form.appendChild(updateBtn);
+        form.appendChild(cancelBtn);
+        box.appendChild(form);
+      }
+
+      // New function: Move event left by swapping with the previous event
+      function moveEventLeft(index) {
+        if (index === 0) return; // Already at first position
+        [events[index], events[index - 1]] = [events[index - 1], events[index]];
+        saveEvents();
+        renderEvents();
+      }
+
+      // New function: Move event right by swapping with the next event
+      function moveEventRight(index) {
+        if (index === events.length - 1) return; // Already at last position
+        [events[index], events[index + 1]] = [events[index + 1], events[index]];
+        saveEvents();
+        renderEvents();
+      }
+
+      // New function: Copy share link of the event to the clipboard with event details as query parameters
+      function shareEvent(index) {
+        const ev = events[index];
+        const params = new URLSearchParams();
+        params.set("dsEvent", "1");
+        params.set("name", ev.name);
+        params.set("lastUpdated", ev.lastUpdated);
+        params.set("bgColor", ev.bgColor || "#f9f9f9");
+        if (ev.alertDays !== undefined) {
+          params.set("alertDays", ev.alertDays);
         }
-      };
-
-      const nameInput = document.createElement('input');
-      nameInput.type = 'text';
-      nameInput.value = ev.name;
-      nameInput.required = true;
-      nameInput.style.marginRight = '5px';
-
-      const dateInput = document.createElement('input');
-      dateInput.type = 'datetime-local';
-      let localDate = new Date(ev.lastUpdated);
-      let tzOffset = localDate.getTimezoneOffset() * 60000;
-      let localISO = new Date(localDate - tzOffset).toISOString().slice(0,16);
-      dateInput.value = localISO;
-      dateInput.required = true;
-      dateInput.style.marginRight = '5px';
-
-      // New input for background color (type color shows a color picker)
-      const colorInput = document.createElement('input');
-      colorInput.type = 'color';
-      colorInput.value = ev.bgColor || '#f9f9f9';
-      colorInput.required = true;
-      colorInput.style.marginRight = '5px';
-      
-    const alertInput = document.createElement('input');
-    alertInput.type = 'number';
-    alertInput.placeholder = 'Max Alert days';
-    alertInput.value = ev.alertDays !== undefined ? ev.alertDays : '';
-    alertInput.min = '0';
-    alertInput.style.marginRight = '5px';
-
-    // NEW: Input for minimum alert days
-    const minAlertInput = document.createElement('input');
-    minAlertInput.type = 'number';
-    minAlertInput.placeholder = 'Min Alert days';
-    minAlertInput.value = ev.alertMinDays !== undefined ? ev.alertMinDays : '';
-    minAlertInput.min = '0';
-    minAlertInput.style.marginRight = '5px';
-
-    const updateBtn = document.createElement('button');
-    updateBtn.type = 'submit';
-    updateBtn.textContent = 'Update';
-    updateBtn.className = 'btn btn-edit';
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.type = 'button';
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.className = 'btn btn-delete';
-    cancelBtn.style.marginLeft = '5px';
-    cancelBtn.addEventListener('click', () => {
-      editingIndex = null;  // reset editing flag on cancel
-      renderEvents();
-    });
-
-      form.appendChild(nameInput);
-      form.appendChild(dateInput);
-      form.appendChild(colorInput);
-      form.appendChild(minAlertInput);
-      form.appendChild(alertInput);
-      form.appendChild(updateBtn);
-      form.appendChild(cancelBtn);
-      box.appendChild(form);
-    }
-
-    // New function: Move event left by swapping with the previous event
-    function moveEventLeft(index) {
-      if (index === 0) return; // Already at first position
-      [events[index], events[index - 1]] = [events[index - 1], events[index]];
-      saveEvents();
-      renderEvents();
-    }
-
-    // New function: Move event right by swapping with the next event
-    function moveEventRight(index) {
-      if (index === events.length - 1) return; // Already at last position
-      [events[index], events[index + 1]] = [events[index + 1], events[index]];
-      saveEvents();
-      renderEvents();
-    }
-
-    // New function: Copy share link of the event to the clipboard with event details as query parameters
-    function shareEvent(index) {
-      const ev = events[index];
-      const params = new URLSearchParams();
-      params.set('dsEvent', '1');
-      params.set('name', ev.name);
-      params.set('lastUpdated', ev.lastUpdated);
-      params.set('bgColor', ev.bgColor || '#f9f9f9');
-      if (ev.alertDays !== undefined) {
-        params.set('alertDays', ev.alertDays);
-      }
-      // NEW: Include min alert days if defined
-      if (ev.alertMinDays !== undefined) {
-        params.set('alertMinDays', ev.alertMinDays);
-      }
-      const shareUrl = window.location.origin + window.location.pathname + '?' + params.toString();
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        alert('Share link copied to clipboard!');
-      }).catch(() => {
-        alert('Failed to copy the share link.');
-      });
-    }
-
-    // New function: Import an event from URL query parameters if present
-    function importEventFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('dsEvent') === '1') {
-        const name = params.get('name');
-        const lastUpdated = params.get('lastUpdated');
-        const bgColor = params.get('bgColor') || '#f9f9f9';
-        const alertDays = params.get('alertDays');
-        // NEW: Get minimum alert days if provided
-        const alertMinDays = params.get('alertMinDays');
-        if (name && lastUpdated && confirm(`Do you want to import the event "${name}"?`)) {
-          events.push({
-            name: name,
-            lastUpdated: new Date(lastUpdated).toISOString(),
-            bgColor: bgColor,
-            alertDays: alertDays ? parseInt(alertDays) : undefined,
-            alertMinDays: alertMinDays ? parseInt(alertMinDays) : undefined
+        // NEW: Include min alert days if defined
+        if (ev.alertMinDays !== undefined) {
+          params.set("alertMinDays", ev.alertMinDays);
+        }
+        const shareUrl =
+          window.location.origin +
+          window.location.pathname +
+          "?" +
+          params.toString();
+        navigator.clipboard
+          .writeText(shareUrl)
+          .then(() => {
+            alert("Share link copied to clipboard!");
+          })
+          .catch(() => {
+            alert("Failed to copy the share link.");
           });
-          saveEvents();
-          renderEvents();
-          // Remove query parameters from the URL without reloading the page
-          window.history.replaceState(null, '', window.location.pathname);
-        }
       }
-    }
 
-    // New function: Copy share link for all events to the clipboard.
-    // It serializes all events as JSON and appends them as query parameter `dsEvents`.
-    function shareAllEvents() {
-      if (events.length === 0) {
-        alert('No events to share.');
-        return;
-      }
-      const jsonData = JSON.stringify(events);
-      const baseUrl = window.location.origin + window.location.pathname;
-      const shareUrl = baseUrl + '?dsEvents=' + encodeURIComponent(jsonData);
-      
-      if (shareUrl.length > 2048) {
-        alert('The share link is too long. Please share the individual events instead.');
-        return;
-      }
-      
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        alert('Share link for all events copied to clipboard!');
-      }).catch(() => {
-        alert('Failed to copy the share link.');
-      });
-    }
-
-    // New function: Import events from URL query parameters if present from a share-all link
-    function importAllEventsFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      const dsEvents = params.get('dsEvents');
-      if (dsEvents) {
-        try {
-          const importedEvents = JSON.parse(decodeURIComponent(dsEvents));
-          if (Array.isArray(importedEvents) && importedEvents.length > 0 &&
-              confirm(`Do you want to import ${importedEvents.length} shared event${importedEvents.length > 1 ? 's' : ''}?`)) {
-            // Append imported events to existing events
-            events = events.concat(importedEvents);
+      // New function: Import an event from URL query parameters if present
+      function importEventFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("dsEvent") === "1") {
+          const name = params.get("name");
+          const lastUpdated = params.get("lastUpdated");
+          const bgColor = params.get("bgColor") || "#f9f9f9";
+          const alertDays = params.get("alertDays");
+          // NEW: Get minimum alert days if provided
+          const alertMinDays = params.get("alertMinDays");
+          if (
+            name &&
+            lastUpdated &&
+            confirm(`Do you want to import the event "${name}"?`)
+          ) {
+            events.push({
+              name: name,
+              lastUpdated: new Date(lastUpdated).toISOString(),
+              bgColor: bgColor,
+              alertDays: alertDays ? parseInt(alertDays) : undefined,
+              alertMinDays: alertMinDays ? parseInt(alertMinDays) : undefined,
+            });
             saveEvents();
             renderEvents();
             // Remove query parameters from the URL without reloading the page
-            window.history.replaceState(null, '', window.location.pathname);
+            window.history.replaceState(null, "", window.location.pathname);
           }
-        } catch (e) {
-          console.error('Error importing events:', e);
         }
       }
-    }
 
-    // Load grid configuration from localStorage and apply it (only columns)
-    function loadGridConfig() {
-      const config = JSON.parse(localStorage.getItem('gridConfig'));
-      const eventGrid = document.getElementById('eventGrid');
-      if (config) {
-        eventGrid.style.gridTemplateColumns = `repeat(${config.columns}, 1fr)`;
-        document.getElementById('gridCols').value = config.columns;
+      // New function: Copy share link for all events to the clipboard.
+      // It serializes all events as JSON and appends them as query parameter `dsEvents`.
+      function shareAllEvents() {
+        if (events.length === 0) {
+          alert("No events to share.");
+          return;
+        }
+        const jsonData = JSON.stringify(events);
+        const baseUrl = window.location.origin + window.location.pathname;
+        const shareUrl = baseUrl + "?dsEvents=" + encodeURIComponent(jsonData);
+
+        if (shareUrl.length > 2048) {
+          alert(
+            "The share link is too long. Please share the individual events instead."
+          );
+          return;
+        }
+
+        navigator.clipboard
+          .writeText(shareUrl)
+          .then(() => {
+            alert("Share link for all events copied to clipboard!");
+          })
+          .catch(() => {
+            alert("Failed to copy the share link.");
+          });
       }
-    }
 
-    // Update grid configuration whenever the column input is changed
-    function updateGridConfig() {
-      const cols = document.getElementById('gridCols').value;
-      const config = { columns: parseInt(cols) };
-      localStorage.setItem('gridConfig', JSON.stringify(config));
-      const eventGrid = document.getElementById('eventGrid');
-      eventGrid.style.gridTemplateColumns = `repeat(${config.columns}, 1fr)`;
-    }
+      // New function: Import events from URL query parameters if present from a share-all link
+      function importAllEventsFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const dsEvents = params.get("dsEvents");
+        if (dsEvents) {
+          try {
+            const importedEvents = JSON.parse(decodeURIComponent(dsEvents));
+            if (
+              Array.isArray(importedEvents) &&
+              importedEvents.length > 0 &&
+              confirm(
+                `Do you want to import ${importedEvents.length} shared event${
+                  importedEvents.length > 1 ? "s" : ""
+                }?`
+              )
+            ) {
+              // Append imported events to existing events
+              events = events.concat(importedEvents);
+              saveEvents();
+              renderEvents();
+              // Remove query parameters from the URL without reloading the page
+              window.history.replaceState(null, "", window.location.pathname);
+            }
+          } catch (e) {
+            console.error("Error importing events:", e);
+          }
+        }
+      }
 
-    // Attach change event to gridCols input so changes are auto-saved
-    document.getElementById('gridCols').addEventListener('change', updateGridConfig);
+      // Load grid configuration from localStorage and apply it (only columns)
+      function loadGridConfig() {
+        const config = JSON.parse(localStorage.getItem("gridConfig"));
+        const eventGrid = document.getElementById("eventGrid");
+        if (config) {
+          eventGrid.style.gridTemplateColumns = `repeat(${config.columns}, 1fr)`;
+          document.getElementById("gridCols").value = config.columns;
+        }
+      }
 
-    // Initial render on page load
-    renderEvents();
-    loadGridConfig();
-    importEventFromUrl();
-    importAllEventsFromUrl();
-  </script>
-</body>
+      // Update grid configuration whenever the column input is changed
+      function updateGridConfig() {
+        const cols = document.getElementById("gridCols").value;
+        const config = { columns: parseInt(cols) };
+        localStorage.setItem("gridConfig", JSON.stringify(config));
+        const eventGrid = document.getElementById("eventGrid");
+        eventGrid.style.gridTemplateColumns = `repeat(${config.columns}, 1fr)`;
+      }
+
+      // Attach change event to gridCols input so changes are auto-saved
+      document
+        .getElementById("gridCols")
+        .addEventListener("change", updateGridConfig);
+
+      // Initial render on page load
+      renderEvents();
+      loadGridConfig();
+      importEventFromUrl();
+      importAllEventsFromUrl();
+    </script>
+  </body>
 </html>
