@@ -107,10 +107,8 @@
       eventGrid.innerHTML = ''; // Clear existing items
 
       events.forEach((ev, index) => {
-        // Calculate how many days since the event was last refreshed
         const dayCount = daysSince(ev.lastUpdated);
 
-        // Create the event box
         const box = document.createElement('div');
         box.className = 'event-box';
 
@@ -134,13 +132,18 @@
         deleteBtn.textContent = 'Delete';
         deleteBtn.addEventListener('click', () => deleteEvent(index));
 
-        // Append elements to the box
+        // Edit button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-edit';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', () => editEvent(index));
+
         box.appendChild(title);
         box.appendChild(dayDisplay);
         box.appendChild(refreshBtn);
         box.appendChild(deleteBtn);
+        box.appendChild(editBtn);
 
-        // Add to the grid
         eventGrid.appendChild(box);
       });
     }
@@ -178,6 +181,64 @@
       events.splice(index, 1);
       saveEvents();
       renderEvents();
+    }
+
+    // Edit an event: replaces the box with inline inputs to edit the name and time
+    function editEvent(index) {
+      const ev = events[index];
+      const eventGrid = document.getElementById('eventGrid');
+      // Assumes the order of boxes corresponds to events order
+      const box = eventGrid.children[index];
+      box.innerHTML = '';
+
+      const form = document.createElement('form');
+      form.onsubmit = function(e) {
+        e.preventDefault();
+        const newName = nameInput.value.trim();
+        const newDatetime = dateInput.value;
+        if(newName && newDatetime) {
+          events[index].name = newName;
+          // Convert the datetime-local value back to an ISO string
+          events[index].lastUpdated = new Date(newDatetime).toISOString();
+          saveEvents();
+          renderEvents();
+        }
+      };
+
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = ev.name;
+      nameInput.required = true;
+      nameInput.style.marginRight = '5px';
+
+      const dateInput = document.createElement('input');
+      dateInput.type = 'datetime-local';
+      // Convert stored ISO date to a format suitable for datetime-local input (in local time)
+      let localDate = new Date(ev.lastUpdated);
+      let tzOffset = localDate.getTimezoneOffset() * 60000;
+      let localISO = new Date(localDate - tzOffset).toISOString().slice(0,16);
+      dateInput.value = localISO;
+      dateInput.required = true;
+      dateInput.style.marginRight = '5px';
+
+      const updateBtn = document.createElement('button');
+      updateBtn.type = 'submit';
+      updateBtn.textContent = 'Update';
+      updateBtn.className = 'btn';
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.className = 'btn';
+      cancelBtn.style.marginLeft = '5px';
+      cancelBtn.addEventListener('click', () => renderEvents());
+
+      form.appendChild(nameInput);
+      form.appendChild(dateInput);
+      form.appendChild(updateBtn);
+      form.appendChild(cancelBtn);
+
+      box.appendChild(form);
     }
 
     // Initial render on page load
