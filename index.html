@@ -80,6 +80,12 @@
       <input type="text" id="newEventName" placeholder="Event name" required />
       <button type="submit">Add Event</button>
     </form>
+
+    <!-- Grid Configuration Form -->
+    <form id="gridConfigForm" class="config-form">
+      <label for="gridCols">Columns:</label>
+      <input type="number" id="gridCols" placeholder="Columns" min="1" required />
+    </form>
   </div>
 
   <!-- Grid container for events -->
@@ -118,7 +124,7 @@
 
         const dayDisplay = document.createElement('div');
         dayDisplay.className = 'event-days';
-        dayDisplay.textContent = `${dayCount} day${dayCount !== 1 ? 's' : ''} since last happened`;
+        dayDisplay.textContent = `${dayCount} day${dayCount !== 1 ? 's' : ''}`;
 
         // Refresh button
         const refreshBtn = document.createElement('button');
@@ -241,8 +247,31 @@
       box.appendChild(form);
     }
 
+    // Load grid configuration from localStorage and apply it (only columns)
+    function loadGridConfig() {
+      const config = JSON.parse(localStorage.getItem('gridConfig'));
+      const eventGrid = document.getElementById('eventGrid');
+      if (config) {
+        eventGrid.style.gridTemplateColumns = `repeat(${config.columns}, 1fr)`;
+        document.getElementById('gridCols').value = config.columns;
+      }
+    }
+
+    // Update grid configuration whenever the column input is changed
+    function updateGridConfig() {
+      const cols = document.getElementById('gridCols').value;
+      const config = { columns: parseInt(cols) };
+      localStorage.setItem('gridConfig', JSON.stringify(config));
+      const eventGrid = document.getElementById('eventGrid');
+      eventGrid.style.gridTemplateColumns = `repeat(${config.columns}, 1fr)`;
+    }
+
+    // Attach change event to gridCols input so changes are auto-saved
+    document.getElementById('gridCols').addEventListener('change', updateGridConfig);
+
     // Initial render on page load
     renderEvents();
+    loadGridConfig();
   </script>
 </body>
 </html>
