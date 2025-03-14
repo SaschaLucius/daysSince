@@ -250,26 +250,26 @@
       }
 
       // New helper function: return white if background is dark, else black
-      function getFontColor(bgColor) {
-        if (bgColor[0] === "#") {
-          bgColor = bgColor.slice(1);
+      function getFontColor(bg) {
+        if (bg[0] === "#") {
+          bg = bg.slice(1);
         }
-        if (bgColor.length === 3) {
-          bgColor = bgColor
+        if (bg.length === 3) {
+          bg = bg
             .split("")
             .map((c) => c + c)
             .join("");
         }
-        const r = parseInt(bgColor.substring(0, 2), 16);
-        const g = parseInt(bgColor.substring(2, 4), 16);
-        const b = parseInt(bgColor.substring(4, 6), 16);
+        const r = parseInt(bg.substring(0, 2), 16);
+        const g = parseInt(bg.substring(2, 4), 16);
+        const b = parseInt(bg.substring(4, 6), 16);
         // Calculate brightness (standard luminance formula)
         const brightness = (r * 299 + g * 587 + b * 114) / 1000;
         return brightness < 128 ? "#ffffff" : "#000000";
       }
 
-      // Updated renderEvents: if the sort checkbox is checked, display events sorted by lastUpdated (oldest first)
-      // Updated renderEvents: add pulsating border if alertDays is set and reached
+      // Updated renderEvents: if the sort checkbox is checked, display events sorted by last (oldest first)
+      // Updated renderEvents: add pulsating border if max is set and reached
       function renderEvents() {
         const eventGrid = document.getElementById("eventGrid");
         eventGrid.innerHTML = "";
@@ -279,26 +279,26 @@
         const sortCheckbox = document.getElementById("sortOldest");
         if (sortCheckbox && sortCheckbox.checked) {
           displayEvents.sort(
-            (a, b) => new Date(a.ev.lastUpdated) - new Date(b.ev.lastUpdated)
+            (a, b) => new Date(a.ev.last) - new Date(b.ev.last)
           );
         }
 
         displayEvents.forEach((item) => {
           const ev = item.ev;
           const originalIndex = item.index;
-          const dayCount = daysSince(ev.lastUpdated);
+          const dayCount = daysSince(ev.last);
           const box = document.createElement("div");
           box.className = "event-box";
-          const bgColor = ev.bgColor || "#f9f9f9";
-          box.style.backgroundColor = bgColor;
-          const fontColor = getFontColor(bgColor);
+          const bg = ev.bg || "#f9f9f9";
+          box.style.backgroundColor = bg;
+          const fontColor = getFontColor(bg);
           // Set color on container (may be inherited unless overridden)
           box.style.color = fontColor;
 
-          // If alertDays is set and reached, add pulsating animation
+          // If max is set and reached, add pulsating animation
           if (
-            (ev.alertDays !== undefined && dayCount >= ev.alertDays) ||
-            (ev.alertMinDays !== undefined && dayCount < ev.alertMinDays)
+            (ev.max !== undefined && dayCount >= ev.max) ||
+            (ev.min !== undefined && dayCount < ev.min)
           ) {
             box.classList.add("alert");
           }
@@ -344,6 +344,13 @@
           editBtn.title = "Edit";
           editBtn.addEventListener("click", () => editEvent(originalIndex));
 
+          // NEW: Add share button
+          const shareBtn = document.createElement("button");
+          shareBtn.className = "btn btn-share";
+          shareBtn.textContent = "🔗";
+          shareBtn.title = "Share";
+          shareBtn.addEventListener("click", () => shareEvent(originalIndex));
+
           // Left arrow button for reordering
           const leftArrow = document.createElement("button");
           leftArrow.className = "btn btn-move-left";
@@ -364,20 +371,13 @@
           buttonContainer.appendChild(refreshBtn);
           buttonContainer.appendChild(deleteBtn);
           buttonContainer.appendChild(editBtn);
+          buttonContainer.appendChild(shareBtn);
 
           // Only show the reorder arrows if "Sort oldest on top" is not enabled.
           if (!sortCheckbox.checked) {
             buttonContainer.appendChild(leftArrow);
             buttonContainer.appendChild(rightArrow);
           }
-
-          // NEW: Add share button
-          const shareBtn = document.createElement("button");
-          shareBtn.className = "btn btn-share";
-          shareBtn.textContent = "🔗";
-          shareBtn.title = "Share";
-          shareBtn.addEventListener("click", () => shareEvent(originalIndex));
-          buttonContainer.appendChild(shareBtn);
 
           // Append elements in order: title, day count, button container
           box.appendChild(title);
@@ -398,7 +398,7 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
       }
 
-      // Add a new event (sets its 'lastUpdated' to now)
+      // Add a new event (sets its 'last' to now)
       function addEvent(e) {
         e.preventDefault(); // Prevent page refresh
         const input = document.getElementById("newEventName");
@@ -407,16 +407,16 @@
 
         events.push({
           name: eventName,
-          lastUpdated: new Date().toISOString(),
+          last: new Date().toISOString(),
         });
         saveEvents();
         renderEvents();
         input.value = ""; // Clear the input
       }
 
-      // Refresh an event (set 'lastUpdated' to now)
+      // Refresh an event (set 'last' to now)
       function refreshEvent(index) {
-        events[index].lastUpdated = new Date().toISOString();
+        events[index].last = new Date().toISOString();
         saveEvents();
         renderEvents();
       }
@@ -447,15 +447,15 @@
           e.preventDefault();
           const newName = nameInput.value.trim();
           const newDatetime = dateInput.value;
-          const newBgColor = colorInput.value;
+          const newbg = colorInput.value;
           const newAlert = alertInput.value.trim();
           const newMinAlert = minAlertInput.value.trim();
           if (newName && newDatetime) {
             events[index].name = newName;
-            events[index].lastUpdated = new Date(newDatetime).toISOString();
-            events[index].bgColor = newBgColor;
-            events[index].alertDays = newAlert ? parseInt(newAlert) : undefined;
-            events[index].alertMinDays = newMinAlert
+            events[index].last = new Date(newDatetime).toISOString();
+            events[index].bg = newbg;
+            events[index].max = newAlert ? parseInt(newAlert) : undefined;
+            events[index].min = newMinAlert
               ? parseInt(newMinAlert)
               : undefined;
             saveEvents();
@@ -472,7 +472,7 @@
 
         const dateInput = document.createElement("input");
         dateInput.type = "datetime-local";
-        let localDate = new Date(ev.lastUpdated);
+        let localDate = new Date(ev.last);
         let tzOffset = localDate.getTimezoneOffset() * 60000;
         let localISO = new Date(localDate - tzOffset)
           .toISOString()
@@ -484,14 +484,14 @@
         // New input for background color (type color shows a color picker)
         const colorInput = document.createElement("input");
         colorInput.type = "color";
-        colorInput.value = ev.bgColor || "#f9f9f9";
+        colorInput.value = ev.bg || "#f9f9f9";
         colorInput.required = true;
         colorInput.style.marginRight = "5px";
 
         const alertInput = document.createElement("input");
         alertInput.type = "number";
         alertInput.placeholder = "Max Alert days";
-        alertInput.value = ev.alertDays !== undefined ? ev.alertDays : "";
+        alertInput.value = ev.max !== undefined ? ev.max : "";
         alertInput.min = "0";
         alertInput.style.marginRight = "5px";
 
@@ -500,7 +500,7 @@
         minAlertInput.type = "number";
         minAlertInput.placeholder = "Min Alert days";
         minAlertInput.value =
-          ev.alertMinDays !== undefined ? ev.alertMinDays : "";
+          ev.min !== undefined ? ev.min : "";
         minAlertInput.min = "0";
         minAlertInput.style.marginRight = "5px";
 
@@ -551,14 +551,14 @@
         const params = new URLSearchParams();
         params.set("dsEvent", "1");
         params.set("name", ev.name);
-        params.set("lastUpdated", ev.lastUpdated);
-        params.set("bgColor", ev.bgColor || "#f9f9f9");
-        if (ev.alertDays !== undefined) {
-          params.set("alertDays", ev.alertDays);
+        params.set("last", ev.last);
+        params.set("bg", ev.bg || "#f9f9f9");
+        if (ev.max !== undefined) {
+          params.set("max", ev.max);
         }
         // NEW: Include min alert days if defined
-        if (ev.alertMinDays !== undefined) {
-          params.set("alertMinDays", ev.alertMinDays);
+        if (ev.min !== undefined) {
+          params.set("min", ev.min);
         }
         const shareUrl =
           window.location.origin +
@@ -580,22 +580,22 @@
         const params = new URLSearchParams(window.location.search);
         if (params.get("dsEvent") === "1") {
           const name = params.get("name");
-          const lastUpdated = params.get("lastUpdated");
-          const bgColor = params.get("bgColor") || "#f9f9f9";
-          const alertDays = params.get("alertDays");
+          const last = params.get("last");
+          const bg = params.get("bg") || "#f9f9f9";
+          const max = params.get("max");
           // NEW: Get minimum alert days if provided
-          const alertMinDays = params.get("alertMinDays");
+          const min = params.get("min");
           if (
             name &&
-            lastUpdated &&
+            last &&
             confirm(`Do you want to import the event "${name}"?`)
           ) {
             events.push({
               name: name,
-              lastUpdated: new Date(lastUpdated).toISOString(),
-              bgColor: bgColor,
-              alertDays: alertDays ? parseInt(alertDays) : undefined,
-              alertMinDays: alertMinDays ? parseInt(alertMinDays) : undefined,
+              last: new Date(last).toISOString(),
+              bg: bg,
+              max: max ? parseInt(max) : undefined,
+              min: min ? parseInt(min) : undefined,
             });
             saveEvents();
             renderEvents();
