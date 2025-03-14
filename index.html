@@ -322,6 +322,14 @@
           buttonContainer.appendChild(leftArrow);
           buttonContainer.appendChild(rightArrow);
         }
+
+        // NEW: Add share button
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'btn btn-share';
+        shareBtn.textContent = '🔗';
+        shareBtn.title = 'Share';
+        shareBtn.addEventListener('click', () => shareEvent(originalIndex));
+        buttonContainer.appendChild(shareBtn);
     
         // Append elements in order: title, day count, button container
         box.appendChild(title);
@@ -471,6 +479,48 @@
       renderEvents();
     }
 
+    // New function: Copy share link of the event to the clipboard with event details as query parameters
+    function shareEvent(index) {
+      const ev = events[index];
+      const params = new URLSearchParams();
+      params.set('dsEvent', '1');
+      params.set('name', ev.name);
+      params.set('lastUpdated', ev.lastUpdated);
+      params.set('bgColor', ev.bgColor || '#f9f9f9');
+      if (ev.alertDays !== undefined) {
+        params.set('alertDays', ev.alertDays);
+      }
+      const shareUrl = window.location.origin + window.location.pathname + '?' + params.toString();
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('Share link copied to clipboard!');
+      }).catch(() => {
+        alert('Failed to copy the share link.');
+      });
+    }
+
+    // New function: Import an event from URL query parameters if present
+    function importEventFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('dsEvent') === '1') {
+        const name = params.get('name');
+        const lastUpdated = params.get('lastUpdated');
+        const bgColor = params.get('bgColor') || '#f9f9f9';
+        const alertDays = params.get('alertDays');
+        if (name && lastUpdated && confirm(`Do you want to import the event "${name}"?`)) {
+          events.push({
+            name: name,
+            lastUpdated: new Date(lastUpdated).toISOString(),
+            bgColor: bgColor,
+            alertDays: alertDays ? parseInt(alertDays) : undefined
+          });
+          saveEvents();
+          renderEvents();
+          // Remove query parameters from the URL without reloading the page
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      }
+    }
+
     // Load grid configuration from localStorage and apply it (only columns)
     function loadGridConfig() {
       const config = JSON.parse(localStorage.getItem('gridConfig'));
@@ -496,6 +546,7 @@
     // Initial render on page load
     renderEvents();
     loadGridConfig();
+    importEventFromUrl();
   </script>
 </body>
 </html>
