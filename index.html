@@ -263,7 +263,9 @@
         box.className = 'event-box';
         const bgColor = ev.bgColor || '#f9f9f9';
         box.style.backgroundColor = bgColor;
-        box.style.color = getFontColor(bgColor);
+        const fontColor = getFontColor(bgColor);
+        // Set color on container (may be inherited unless overridden)
+        box.style.color = fontColor;
         
         // If alertDays is set and reached, add pulsating animation
         if (ev.alertDays !== undefined && dayCount >= ev.alertDays) {
@@ -273,10 +275,14 @@
         const title = document.createElement('div');
         title.className = 'event-title';
         title.textContent = ev.name;
+        // Apply inline color here to override CSS
+        title.style.color = fontColor;
     
         const dayDisplay = document.createElement('div');
         dayDisplay.className = 'event-days';
         dayDisplay.textContent = `${dayCount} day${dayCount !== 1 ? 's' : ''}`;
+        // Apply inline color here to override CSS
+        dayDisplay.style.color = fontColor;
     
         // Create a container for the buttons
         const buttonContainer = document.createElement('div');
