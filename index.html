@@ -268,7 +268,7 @@
         box.style.color = fontColor;
         
         // If alertDays is set and reached, add pulsating animation
-        if (ev.alertDays !== undefined && dayCount >= ev.alertDays) {
+        if ((ev.alertDays !== undefined && dayCount >= ev.alertDays) || (ev.alertMinDays !== undefined && dayCount < ev.alertMinDays)) {
           box.classList.add('alert');
         }
         
@@ -408,14 +408,16 @@
         const newDatetime = dateInput.value;
         const newBgColor = colorInput.value;
         const newAlert = alertInput.value.trim();
+        const newMinAlert = minAlertInput.value.trim();
         if(newName && newDatetime) {
           events[index].name = newName;
           events[index].lastUpdated = new Date(newDatetime).toISOString();
           events[index].bgColor = newBgColor;
           events[index].alertDays = newAlert ? parseInt(newAlert) : undefined;
+          events[index].alertMinDays = newMinAlert ? parseInt(newMinAlert) : undefined;
           saveEvents();
           renderEvents();
-          editingIndex = null;  // reset editing flag
+          editingIndex = null;
         }
       };
 
@@ -443,10 +445,18 @@
       
     const alertInput = document.createElement('input');
     alertInput.type = 'number';
-    alertInput.placeholder = 'Alert days';
+    alertInput.placeholder = 'Max Alert days';
     alertInput.value = ev.alertDays !== undefined ? ev.alertDays : '';
     alertInput.min = '0';
     alertInput.style.marginRight = '5px';
+
+    // NEW: Input for minimum alert days
+    const minAlertInput = document.createElement('input');
+    minAlertInput.type = 'number';
+    minAlertInput.placeholder = 'Min Alert days';
+    minAlertInput.value = ev.alertMinDays !== undefined ? ev.alertMinDays : '';
+    minAlertInput.min = '0';
+    minAlertInput.style.marginRight = '5px';
 
     const updateBtn = document.createElement('button');
     updateBtn.type = 'submit';
@@ -466,6 +476,7 @@
       form.appendChild(nameInput);
       form.appendChild(dateInput);
       form.appendChild(colorInput);
+      form.appendChild(minAlertInput);
       form.appendChild(alertInput);
       form.appendChild(updateBtn);
       form.appendChild(cancelBtn);
@@ -499,6 +510,10 @@
       if (ev.alertDays !== undefined) {
         params.set('alertDays', ev.alertDays);
       }
+      // NEW: Include min alert days if defined
+      if (ev.alertMinDays !== undefined) {
+        params.set('alertMinDays', ev.alertMinDays);
+      }
       const shareUrl = window.location.origin + window.location.pathname + '?' + params.toString();
       navigator.clipboard.writeText(shareUrl).then(() => {
         alert('Share link copied to clipboard!');
@@ -515,12 +530,15 @@
         const lastUpdated = params.get('lastUpdated');
         const bgColor = params.get('bgColor') || '#f9f9f9';
         const alertDays = params.get('alertDays');
+        // NEW: Get minimum alert days if provided
+        const alertMinDays = params.get('alertMinDays');
         if (name && lastUpdated && confirm(`Do you want to import the event "${name}"?`)) {
           events.push({
             name: name,
             lastUpdated: new Date(lastUpdated).toISOString(),
             bgColor: bgColor,
-            alertDays: alertDays ? parseInt(alertDays) : undefined
+            alertDays: alertDays ? parseInt(alertDays) : undefined,
+            alertMinDays: alertMinDays ? parseInt(alertMinDays) : undefined
           });
           saveEvents();
           renderEvents();
