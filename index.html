@@ -189,6 +189,9 @@
       <button type="submit">Add Event</button>
     </form>
 
+    <!-- NEW: Share All button -->
+    <button id="shareAllBtn" class="btn btn-shareAll" onclick="shareAllEvents()">Share All</button>
+
     <!-- Grid Configuration Form -->
     <form id="gridConfigForm" class="config-form">
       <label for="gridCols">Columns:</label>
@@ -521,6 +524,44 @@
       }
     }
 
+    // New function: Copy share link for all events to the clipboard.
+    // It serializes all events as JSON and appends them as query parameter `dsEvents`.
+    function shareAllEvents() {
+      if (events.length === 0) {
+        alert('No events to share.');
+        return;
+      }
+      const jsonData = JSON.stringify(events);
+      const shareUrl = window.location.origin + window.location.pathname + '?dsEvents=' + encodeURIComponent(jsonData);
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('Share link for all events copied to clipboard!');
+      }).catch(() => {
+        alert('Failed to copy the share link.');
+      });
+    }
+
+    // New function: Import events from URL query parameters if present from a share-all link
+    function importAllEventsFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const dsEvents = params.get('dsEvents');
+      if (dsEvents) {
+        try {
+          const importedEvents = JSON.parse(decodeURIComponent(dsEvents));
+          if (Array.isArray(importedEvents) && importedEvents.length > 0 &&
+              confirm(`Do you want to import ${importedEvents.length} shared event${importedEvents.length > 1 ? 's' : ''}?`)) {
+            // Append imported events to existing events
+            events = events.concat(importedEvents);
+            saveEvents();
+            renderEvents();
+            // Remove query parameters from the URL without reloading the page
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        } catch (e) {
+          console.error('Error importing events:', e);
+        }
+      }
+    }
+
     // Load grid configuration from localStorage and apply it (only columns)
     function loadGridConfig() {
       const config = JSON.parse(localStorage.getItem('gridConfig'));
@@ -547,6 +588,7 @@
     renderEvents();
     loadGridConfig();
     importEventFromUrl();
+    importAllEventsFromUrl();
   </script>
 </body>
 </html>
