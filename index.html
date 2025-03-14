@@ -196,6 +196,7 @@
 
     // Load events from localStorage or create an empty array if none exist
     let events = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    let editingIndex = null; // <-- added global variable
 
     // Helper function: Calculate difference in days between now and a given date
     function daysSince(dateString) {
@@ -347,7 +348,14 @@
 
     // In editEvent, add a color input for background and store it in the event object
     // Updated editEvent: add input for alert days
+    // In editEvent, warn if another element is currently being edited
     function editEvent(index) {
+      if (editingIndex !== null && editingIndex !== index) {
+        alert("Finish editing the current element before editing another.");
+        return;
+      }
+      editingIndex = index;
+
       const ev = events[index];
       const eventGrid = document.getElementById('eventGrid');
       const box = eventGrid.children[index];
@@ -366,6 +374,7 @@
           events[index].alertDays = newAlert ? parseInt(newAlert) : undefined;
           saveEvents();
           renderEvents();
+          editingIndex = null;  // reset editing flag
         }
       };
 
@@ -408,7 +417,10 @@
     cancelBtn.textContent = 'Cancel';
     cancelBtn.className = 'btn btn-delete';
     cancelBtn.style.marginLeft = '5px';
-    cancelBtn.addEventListener('click', () => renderEvents());
+    cancelBtn.addEventListener('click', () => {
+      editingIndex = null;  // reset editing flag on cancel
+      renderEvents();
+    });
 
       form.appendChild(nameInput);
       form.appendChild(dateInput);
