@@ -97,6 +97,17 @@
         font-size: 0.875rem;
       }
     }
+
+    .alert {
+      animation: pulsate 1.5s infinite;
+      border: 2px solid red;
+    }
+
+    @keyframes pulsate {
+      0% { box-shadow: 0 0 5px red; }
+      50% { box-shadow: 0 0 15px red; }
+      100% { box-shadow: 0 0 5px red; }
+    }
   </style>
 </head>
 <body>
@@ -159,6 +170,7 @@
     }
 
     // Updated renderEvents: if the sort checkbox is checked, display events sorted by lastUpdated (oldest first)
+    // Updated renderEvents: add pulsating border if alertDays is set and reached
     function renderEvents() {
       const eventGrid = document.getElementById('eventGrid');
       eventGrid.innerHTML = '';
@@ -179,6 +191,11 @@
         const bgColor = ev.bgColor || '#f9f9f9';
         box.style.backgroundColor = bgColor;
         box.style.color = getFontColor(bgColor);
+        
+        // If alertDays is set and reached, add pulsating animation
+        if (ev.alertDays !== undefined && dayCount >= ev.alertDays) {
+          box.classList.add('alert');
+        }
         
         const title = document.createElement('div');
         title.className = 'event-title';
@@ -273,6 +290,7 @@
     }
 
     // In editEvent, add a color input for background and store it in the event object
+    // Updated editEvent: add input for alert days
     function editEvent(index) {
       const ev = events[index];
       const eventGrid = document.getElementById('eventGrid');
@@ -284,10 +302,12 @@
         const newName = nameInput.value.trim();
         const newDatetime = dateInput.value;
         const newBgColor = colorInput.value;
+        const newAlert = alertInput.value.trim();
         if(newName && newDatetime) {
           events[index].name = newName;
           events[index].lastUpdated = new Date(newDatetime).toISOString();
           events[index].bgColor = newBgColor;
+          events[index].alertDays = newAlert ? parseInt(newAlert) : undefined;
           saveEvents();
           renderEvents();
         }
@@ -314,6 +334,13 @@
       colorInput.value = ev.bgColor || '#f9f9f9';
       colorInput.required = true;
       colorInput.style.marginRight = '5px';
+      
+    const alertInput = document.createElement('input');
+    alertInput.type = 'number';
+    alertInput.placeholder = 'Alert days';
+    alertInput.value = ev.alertDays !== undefined ? ev.alertDays : '';
+    alertInput.min = '0';
+    alertInput.style.marginRight = '5px';
 
       const updateBtn = document.createElement('button');
       updateBtn.type = 'submit';
@@ -330,6 +357,7 @@
       form.appendChild(nameInput);
       form.appendChild(dateInput);
       form.appendChild(colorInput);
+      form.appendChild(alertInput);
       form.appendChild(updateBtn);
       form.appendChild(cancelBtn);
       box.appendChild(form);
