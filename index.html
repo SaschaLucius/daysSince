@@ -538,7 +538,14 @@
         return;
       }
       const jsonData = JSON.stringify(events);
-      const shareUrl = window.location.origin + window.location.pathname + '?dsEvents=' + encodeURIComponent(jsonData);
+      const baseUrl = window.location.origin + window.location.pathname;
+      const shareUrl = baseUrl + '?dsEvents=' + encodeURIComponent(jsonData);
+      
+      if (shareUrl.length > 2048) {
+        alert('The share link is too long. Please share the individual events instead.');
+        return;
+      }
+      
       navigator.clipboard.writeText(shareUrl).then(() => {
         alert('Share link for all events copied to clipboard!');
       }).catch(() => {
