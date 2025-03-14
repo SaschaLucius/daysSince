@@ -69,6 +69,10 @@
       margin-left: 5px;
       cursor: pointer;
     }
+    .btn-move-left, .btn-move-right {
+      background-color: #6c757d;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -144,11 +148,25 @@
         editBtn.textContent = 'Edit';
         editBtn.addEventListener('click', () => editEvent(index));
 
+        // Left arrow button for reordering
+        const leftArrow = document.createElement('button');
+        leftArrow.className = 'btn btn-move-left';
+        leftArrow.textContent = '←';
+        leftArrow.addEventListener('click', () => moveEventLeft(index));
+
+        // Right arrow button for reordering
+        const rightArrow = document.createElement('button');
+        rightArrow.className = 'btn btn-move-right';
+        rightArrow.textContent = '→';
+        rightArrow.addEventListener('click', () => moveEventRight(index));
+
         box.appendChild(title);
         box.appendChild(dayDisplay);
         box.appendChild(refreshBtn);
         box.appendChild(deleteBtn);
         box.appendChild(editBtn);
+        box.appendChild(leftArrow);
+        box.appendChild(rightArrow);
 
         eventGrid.appendChild(box);
       });
@@ -245,6 +263,22 @@
       form.appendChild(cancelBtn);
 
       box.appendChild(form);
+    }
+
+    // New function: Move event left by swapping with the previous event
+    function moveEventLeft(index) {
+      if (index === 0) return; // Already at first position
+      [events[index], events[index - 1]] = [events[index - 1], events[index]];
+      saveEvents();
+      renderEvents();
+    }
+
+    // New function: Move event right by swapping with the next event
+    function moveEventRight(index) {
+      if (index === events.length - 1) return; // Already at last position
+      [events[index], events[index + 1]] = [events[index + 1], events[index]];
+      saveEvents();
+      renderEvents();
     }
 
     // Load grid configuration from localStorage and apply it (only columns)
