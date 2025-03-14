@@ -111,17 +111,34 @@
       return Math.floor(diffInMs / (1000 * 60 * 60 * 24));
     }
 
-    // Render all events in the grid
+    // New helper function: return white if background is dark, else black
+    function getFontColor(bgColor) {
+      if (bgColor[0] === '#') {
+        bgColor = bgColor.slice(1);
+      }
+      if (bgColor.length === 3) {
+        bgColor = bgColor.split('').map(c => c + c).join('');
+      }
+      const r = parseInt(bgColor.substring(0, 2), 16);
+      const g = parseInt(bgColor.substring(2, 4), 16);
+      const b = parseInt(bgColor.substring(4, 6), 16);
+      // Calculate brightness (standard luminance formula)
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness < 128 ? '#ffffff' : '#000000';
+    }
+
+    // In renderEvents, set font color based on background brightness.
     function renderEvents() {
       const eventGrid = document.getElementById('eventGrid');
-      eventGrid.innerHTML = ''; // Clear existing items
-
+      eventGrid.innerHTML = '';
       events.forEach((ev, index) => {
         const dayCount = daysSince(ev.lastUpdated);
-
         const box = document.createElement('div');
         box.className = 'event-box';
-
+        const bgColor = ev.bgColor || '#f9f9f9';
+        box.style.backgroundColor = bgColor;
+        box.style.color = getFontColor(bgColor);
+        
         const title = document.createElement('div');
         title.className = 'event-title';
         title.textContent = ev.name;
@@ -207,23 +224,22 @@
       renderEvents();
     }
 
-    // Edit an event: replaces the box with inline inputs to edit the name and time
+    // In editEvent, add a color input for background and store it in the event object
     function editEvent(index) {
       const ev = events[index];
       const eventGrid = document.getElementById('eventGrid');
-      // Assumes the order of boxes corresponds to events order
       const box = eventGrid.children[index];
-      box.innerHTML = '';
-
+      box.innerHTML = '';  
       const form = document.createElement('form');
       form.onsubmit = function(e) {
         e.preventDefault();
         const newName = nameInput.value.trim();
         const newDatetime = dateInput.value;
+        const newBgColor = colorInput.value;
         if(newName && newDatetime) {
           events[index].name = newName;
-          // Convert the datetime-local value back to an ISO string
           events[index].lastUpdated = new Date(newDatetime).toISOString();
+          events[index].bgColor = newBgColor;
           saveEvents();
           renderEvents();
         }
@@ -237,13 +253,19 @@
 
       const dateInput = document.createElement('input');
       dateInput.type = 'datetime-local';
-      // Convert stored ISO date to a format suitable for datetime-local input (in local time)
       let localDate = new Date(ev.lastUpdated);
       let tzOffset = localDate.getTimezoneOffset() * 60000;
       let localISO = new Date(localDate - tzOffset).toISOString().slice(0,16);
       dateInput.value = localISO;
       dateInput.required = true;
       dateInput.style.marginRight = '5px';
+
+      // New input for background color (type color shows a color picker)
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = ev.bgColor || '#f9f9f9';
+      colorInput.required = true;
+      colorInput.style.marginRight = '5px';
 
       const updateBtn = document.createElement('button');
       updateBtn.type = 'submit';
@@ -259,9 +281,9 @@
 
       form.appendChild(nameInput);
       form.appendChild(dateInput);
+      form.appendChild(colorInput);
       form.appendChild(updateBtn);
       form.appendChild(cancelBtn);
-
       box.appendChild(form);
     }
 
