@@ -116,6 +116,13 @@
     </form>
   </div>
 
+  <!-- Add the sorting checkbox below the Grid Configuration Form -->
+  <div id="sortOptions" style="text-align:center; margin-top:0.5rem;">
+    <label>
+      <input type="checkbox" id="sortOldest" /> Sort oldest on top
+    </label>
+  </div>
+
   <!-- Grid container for events -->
   <div id="eventGrid"></div>
 
@@ -151,11 +158,21 @@
       return brightness < 128 ? '#ffffff' : '#000000';
     }
 
-    // In renderEvents, set font color based on background brightness.
+    // Updated renderEvents: if the sort checkbox is checked, display events sorted by lastUpdated (oldest first)
     function renderEvents() {
       const eventGrid = document.getElementById('eventGrid');
       eventGrid.innerHTML = '';
-      events.forEach((ev, index) => {
+      
+      // Build a list of events with their original index
+      let displayEvents = events.map((ev, i) => ({ ev, index: i }));
+      const sortCheckbox = document.getElementById('sortOldest');
+      if (sortCheckbox && sortCheckbox.checked) {
+        displayEvents.sort((a, b) => new Date(a.ev.lastUpdated) - new Date(b.ev.lastUpdated));
+      }
+      
+      displayEvents.forEach(item => {
+        const ev = item.ev;
+        const originalIndex = item.index;
         const dayCount = daysSince(ev.lastUpdated);
         const box = document.createElement('div');
         box.className = 'event-box';
@@ -166,52 +183,59 @@
         const title = document.createElement('div');
         title.className = 'event-title';
         title.textContent = ev.name;
-
+    
         const dayDisplay = document.createElement('div');
         dayDisplay.className = 'event-days';
         dayDisplay.textContent = `${dayCount} day${dayCount !== 1 ? 's' : ''}`;
-
+    
         // Refresh button
         const refreshBtn = document.createElement('button');
         refreshBtn.className = 'btn btn-refresh';
         refreshBtn.textContent = 'Refresh';
-        refreshBtn.addEventListener('click', () => refreshEvent(index));
-
+        refreshBtn.addEventListener('click', () => refreshEvent(originalIndex));
+    
         // Delete button
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-delete';
         deleteBtn.textContent = 'Delete';
-        deleteBtn.addEventListener('click', () => deleteEvent(index));
-
+        deleteBtn.addEventListener('click', () => deleteEvent(originalIndex));
+    
         // Edit button
         const editBtn = document.createElement('button');
         editBtn.className = 'btn btn-edit';
         editBtn.textContent = 'Edit';
-        editBtn.addEventListener('click', () => editEvent(index));
-
+        editBtn.addEventListener('click', () => editEvent(originalIndex));
+    
         // Left arrow button for reordering
         const leftArrow = document.createElement('button');
         leftArrow.className = 'btn btn-move-left';
         leftArrow.textContent = '←';
-        leftArrow.addEventListener('click', () => moveEventLeft(index));
-
+        leftArrow.addEventListener('click', () => moveEventLeft(originalIndex));
+    
         // Right arrow button for reordering
         const rightArrow = document.createElement('button');
         rightArrow.className = 'btn btn-move-right';
         rightArrow.textContent = '→';
-        rightArrow.addEventListener('click', () => moveEventRight(index));
-
+        rightArrow.addEventListener('click', () => moveEventRight(originalIndex));
+    
         box.appendChild(title);
         box.appendChild(dayDisplay);
         box.appendChild(refreshBtn);
         box.appendChild(deleteBtn);
         box.appendChild(editBtn);
-        box.appendChild(leftArrow);
-        box.appendChild(rightArrow);
-
+        
+        // Only show the reorder arrows if "Sort oldest on top" is not enabled.
+        if (!sortCheckbox.checked) {
+          box.appendChild(leftArrow);
+          box.appendChild(rightArrow);
+        }
+    
         eventGrid.appendChild(box);
       });
     }
+    
+    // React to changes in the sort checkbox to update the display immediately.
+    document.getElementById('sortOldest').addEventListener('change', renderEvents);
 
     // Save events array to localStorage
     function saveEvents() {
