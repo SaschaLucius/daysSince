@@ -678,6 +678,44 @@
         }
       }
 
+      // New function: Import n random events if URL parameter 'random' is provided
+      function importRandomEvents() {
+        const params = new URLSearchParams(window.location.search);
+        const randomParam = params.get("random");
+        if (randomParam) {
+          const n = parseInt(randomParam, 10);
+          if (!isNaN(n) && n > 0) {
+            for (let i = 0; i < n; i++) {
+              // Generate a random number of days ago (up to 365 days)
+              const randomDays = Math.floor(Math.random() * 365);
+              const randomDate = new Date();
+              randomDate.setDate(randomDate.getDate() - randomDays);
+              // Generate random event name and a random hex color for background
+              const randomName = "Random Event " + (i + 1);
+              const randomBg =
+                "#" +
+                Math.floor(Math.random() * 16777215)
+                  .toString(16)
+                  .padStart(6, "0");
+              // Add the new random event
+              events.push({
+                name: randomName,
+                last: randomDate.toISOString(),
+                bg: randomBg,
+              });
+            }
+            saveEvents();
+            renderEvents();
+          }
+          // Remove the random parameter from the URL without reloading the page
+          params.delete("random");
+          const newQuery = params.toString();
+          const newUrl =
+            window.location.pathname + (newQuery ? "?" + newQuery : "");
+          window.history.replaceState(null, "", newUrl);
+        }
+      }
+
       // Load grid configuration from localStorage and apply it (only columns)
       function loadGridConfig() {
         const config = JSON.parse(localStorage.getItem("gridConfig"));
@@ -707,6 +745,7 @@
       loadGridConfig();
       importEventFromUrl();
       importAllEventsFromUrl();
+      importRandomEvents();
     </script>
   </body>
 </html>
