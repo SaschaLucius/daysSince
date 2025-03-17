@@ -359,6 +359,15 @@
           shareBtn.title = "Share";
           shareBtn.addEventListener("click", () => shareEvent(originalIndex));
 
+          // NEW: Add history button for viewing the event's time history
+          const historyBtn = document.createElement("button");
+          historyBtn.className = "btn btn-history";
+          historyBtn.textContent = "📜";
+          historyBtn.title = "Show History";
+          historyBtn.addEventListener("click", () =>
+            showHistory(originalIndex)
+          );
+
           // Left arrow button for reordering
           const leftArrow = document.createElement("button");
           leftArrow.className = "btn btn-move-left";
@@ -380,6 +389,7 @@
           buttonContainer.appendChild(deleteBtn);
           buttonContainer.appendChild(editBtn);
           buttonContainer.appendChild(shareBtn);
+          buttonContainer.appendChild(historyBtn);
 
           // Only show the reorder arrows if "Sort oldest on top" is not enabled.
           if (!sortCheckbox.checked) {
@@ -412,10 +422,11 @@
         const input = document.getElementById("newEventName");
         const eventName = input.value.trim();
         if (!eventName) return;
-
+        const now = new Date().toISOString();
         events.push({
           name: eventName,
-          last: new Date().toISOString(),
+          last: now,
+          history: [now], // Store creation time as the first history entry
         });
         saveEvents();
         renderEvents();
@@ -424,7 +435,12 @@
 
       // Refresh an event (set 'last' to now)
       function refreshEvent(index) {
-        events[index].last = new Date().toISOString();
+        const ev = events[index];
+        if (!ev.history) ev.history = [];
+        // Save current 'last' timestamp into history
+        ev.history.push(ev.last);
+        // Update to current time
+        ev.last = new Date().toISOString();
         saveEvents();
         renderEvents();
       }
@@ -459,11 +475,21 @@
           const newAlert = alertInput.value.trim();
           const newMinAlert = minAlertInput.value.trim();
           if (newName && newDatetime) {
-            events[index].name = newName;
-            events[index].last = new Date(newDatetime).toISOString();
-            events[index].bg = newbg;
-            events[index].max = newAlert ? parseInt(newAlert) : undefined;
-            events[index].min = newMinAlert ? parseInt(newMinAlert) : undefined;
+            const newTimeISO = new Date(newDatetime).toISOString();
+            if (newTimeISO !== ev.last) {
+              const addToHistory = confirm(
+                "The time has changed. Click OK to add the previous time as a history entry, or Cancel to just update the time."
+              );
+              if (addToHistory) {
+                if (!ev.history) ev.history = [];
+                ev.history.push(ev.last);
+              }
+              ev.last = newTimeISO;
+            }
+            ev.name = newName;
+            ev.bg = newbg;
+            ev.max = newAlert ? parseInt(newAlert) : undefined;
+            ev.min = newMinAlert ? parseInt(newMinAlert) : undefined;
             saveEvents();
             renderEvents();
             editingIndex = null;
@@ -558,7 +584,9 @@
         params.set("name", ev.name);
         // Use the truncated timestamp
         params.set("last", truncateTimestamp(ev.last));
-        params.set("bg", ev.bg || "#f9f9f9");
+        if (ev.bg !== undefined) {
+          params.set("bg", ev.bg);
+        }
         if (ev.max !== undefined) {
           params.set("max", ev.max);
         }
@@ -586,7 +614,7 @@
         if (params.get("dsEvent") === "1") {
           const name = params.get("name");
           const last = params.get("last");
-          const bg = params.get("bg") || "#f9f9f9";
+          const bg = params.get("bg");
           const max = params.get("max");
           // NEW: Get minimum alert days if provided
           const min = params.get("min");
@@ -599,6 +627,7 @@
               name: name,
               last: new Date(last).toISOString(),
               bg: bg,
+              bg: bg ? bg : undefined,
               max: max ? parseInt(max) : undefined,
               min: min ? parseInt(min) : undefined,
             });
@@ -617,10 +646,13 @@
           alert("No events to share.");
           return;
         }
-        // Create a copy of events with truncated timestamps
-        const eventsForSharing = events.map((ev) => ({
-          ...ev,
-          last: truncateTimestamp(ev.last),
+        // Build a new array excluding the history property
+        const eventsForSharing = events.map(({ name, last, bg, max, min }) => ({
+          name,
+          last: truncateTimestamp(last),
+          bg,
+          max,
+          min,
         }));
         const jsonData = JSON.stringify(eventsForSharing);
 
@@ -701,6 +733,7 @@
               events.push({
                 name: randomName,
                 last: randomDate.toISOString(),
+                history: [randomDate.toISOString()],
                 bg: randomBg,
               });
             }
@@ -739,6 +772,17 @@
       document
         .getElementById("gridCols")
         .addEventListener("change", updateGridConfig);
+
+      // New function to show the history of an event
+      function showHistory(index) {
+        const ev = events[index];
+        if (!ev.history || ev.history.length === 0) {
+          alert("No history available for this event.");
+          return;
+        }
+        const historyList = ev.history.join("\n   ");
+        alert("History of '" + ev.name + "':\n   " + historyList);
+      }
 
       // Initial render on page load
       renderEvents();
