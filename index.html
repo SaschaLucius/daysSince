@@ -268,6 +268,13 @@
         return brightness < 128 ? "#ffffff" : "#000000";
       }
 
+      // Add this helper function near the other helper functions
+      function truncateTimestamp(ts) {
+        const d = new Date(ts);
+        const iso = d.toISOString(); // e.g., "2025-03-17T12:34:56.789Z"
+        return iso.slice(0, 16) + "Z"; // returns "2025-03-17T12:34Z"
+      }
+
       // Updated renderEvents: if the sort checkbox is checked, display events sorted by last (oldest first)
       // Updated renderEvents: add pulsating border if max is set and reached
       function renderEvents() {
@@ -551,12 +558,12 @@
         const params = new URLSearchParams();
         params.set("dsEvent", "1");
         params.set("name", ev.name);
-        params.set("last", ev.last);
+        // Use the truncated timestamp
+        params.set("last", truncateTimestamp(ev.last));
         params.set("bg", ev.bg || "#f9f9f9");
         if (ev.max !== undefined) {
           params.set("max", ev.max);
         }
-        // NEW: Include min alert days if defined
         if (ev.min !== undefined) {
           params.set("min", ev.min);
         }
@@ -612,7 +619,12 @@
           alert("No events to share.");
           return;
         }
-        const jsonData = JSON.stringify(events);
+        // Create a copy of events with truncated timestamps
+        const eventsForSharing = events.map(ev => ({
+          ...ev,
+          last: truncateTimestamp(ev.last)
+        }));
+        const jsonData = JSON.stringify(eventsForSharing);
         const baseUrl = window.location.origin + window.location.pathname;
         const shareUrl = baseUrl + "?dsEvents=" + encodeURIComponent(jsonData);
 
