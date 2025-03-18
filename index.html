@@ -780,8 +780,25 @@
           alert("No history available for this event.");
           return;
         }
-        const historyList = ev.history.join("\n   ");
-        alert("History of '" + ev.name + "':\n   " + historyList);
+
+        let historyDetails = `History of '${ev.name}':\n`;
+        for (let i = 0; i < ev.history.length; i++) {
+          const currentDate = new Date(ev.history[i]);
+          historyDetails += `   ${currentDate.toISOString()}`;
+          if (i < ev.history.length - 1) {
+            const nextDate = new Date(ev.history[i + 1]);
+            const diffInDays = Math.floor(
+              (currentDate - nextDate) / (1000 * 60 * 60 * 24)
+            );
+            historyDetails += ` (${diffInDays} day${
+              diffInDays !== 1 ? "s" : ""
+            })\n`;
+          } else {
+            historyDetails += "\n";
+          }
+        }
+
+        alert(historyDetails);
       }
 
       // Initial render on page load
