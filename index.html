@@ -106,7 +106,7 @@
       }
 
       .event-days {
-        font-size: 2rem; /* increased size for highlighting */
+        font-size: 6rem; /* increased size for highlighting */
         font-weight: bold;
         color: var(--text-color);
         display: flex;
@@ -122,7 +122,7 @@
         cursor: pointer;
         border: none;
         border-radius: 0.25rem;
-        padding: 0.5rem 0.75rem;
+        padding: 0.25rem 0.375rem;
         margin: 0 0.3125rem;
         font-size: 1rem;
         transition: background-color 0.2s ease, transform 0.2s ease;
@@ -319,9 +319,8 @@
 
           const dayDisplay = document.createElement("div");
           dayDisplay.className = "event-days";
-          dayDisplay.textContent = `${dayCount} day${
-            dayCount !== 1 ? "s" : ""
-          }`;
+          dayDisplay.textContent = `${dayCount}`;
+          dayDisplay.title = `${dayCount} day${dayCount !== 1 ? "s" : ""}`;
           // Apply inline color here to override CSS
           dayDisplay.style.color = fontColor;
 
@@ -774,183 +773,131 @@
         .addEventListener("change", updateGridConfig);
 
       // New function to show the history of an event
-    function showHistory(index) {
-      const ev = events[index];
-      if (!ev.history || ev.history.length === 0) {
-        alert("No history available for this event.");
-        return;
+      function showHistory(index) {
+        const ev = events[index];
+        if (!ev.history || ev.history.length === 0) {
+          alert("No history available for this event.");
+          return;
+        }
+
+        // Create modal overlay
+        const modalOverlay = document.createElement("div");
+        modalOverlay.id = "historyModalOverlay";
+        modalOverlay.style.position = "fixed";
+        modalOverlay.style.top = 0;
+        modalOverlay.style.left = 0;
+        modalOverlay.style.width = "100%";
+        modalOverlay.style.height = "100%";
+        modalOverlay.style.backgroundColor = "rgba(0,0,0,0.5)";
+        modalOverlay.style.display = "flex";
+        modalOverlay.style.alignItems = "center";
+        modalOverlay.style.justifyContent = "center";
+        modalOverlay.style.zIndex = 1000;
+
+        // Create modal container
+        const modal = document.createElement("div");
+        modal.id = "historyModal";
+        modal.style.backgroundColor = "#fff";
+        modal.style.padding = "1rem";
+        modal.style.borderRadius = "0.5rem";
+        modal.style.maxWidth = "90%";
+        modal.style.maxHeight = "80%";
+        modal.style.overflowY = "auto";
+
+        // Header with title and close button
+        const header = document.createElement("div");
+        header.style.display = "flex";
+        header.style.justifyContent = "space-between";
+        header.style.alignItems = "center";
+
+        const title = document.createElement("h3");
+        title.textContent = `History of '${ev.name}'`;
+        header.appendChild(title);
+
+        const closeButton = document.createElement("button");
+        closeButton.textContent = "X";
+        closeButton.className = "btn btn-delete";
+        closeButton.addEventListener("click", () => {
+          document.body.removeChild(modalOverlay);
+        });
+        header.appendChild(closeButton);
+        modal.appendChild(header);
+
+        // List container for history entries
+        const list = document.createElement("ul");
+        list.style.listStyle = "none";
+        list.style.padding = 0;
+
+        // Iterate through each history entry
+        ev.history.forEach((time, i) => {
+          const listItem = document.createElement("li");
+          listItem.style.marginBottom = "0.5rem";
+          listItem.style.display = "flex";
+          listItem.style.alignItems = "center";
+
+          // Timestamp display
+          const timestampSpan = document.createElement("span");
+          timestampSpan.textContent = new Date(time).toISOString() + " ";
+          listItem.appendChild(timestampSpan);
+
+          // Edit button to update the entry's time
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "✏️";
+          editBtn.title = "Edit";
+          editBtn.className = "btn btn-edit";
+          editBtn.style.marginLeft = "0.5rem";
+          editBtn.addEventListener("click", () => {
+            // Create an input for editing the datetime
+            const input = document.createElement("input");
+            input.type = "datetime-local";
+            let localDate = new Date(time);
+            let tzOffset = localDate.getTimezoneOffset() * 60000;
+            input.value = new Date(localDate - tzOffset)
+              .toISOString()
+              .slice(0, 16);
+            listItem.replaceChild(input, timestampSpan);
+
+            // Create a save button for the updated time
+            const saveBtn = document.createElement("button");
+            saveBtn.textContent = "Save";
+            saveBtn.className = "btn btn-edit";
+            saveBtn.style.marginLeft = "0.5rem";
+            saveBtn.addEventListener("click", () => {
+              const newTime = new Date(input.value).toISOString();
+              ev.history[i] = newTime;
+              saveEvents();
+              timestampSpan.textContent = newTime + " ";
+              listItem.replaceChild(timestampSpan, input);
+              listItem.removeChild(saveBtn);
+            });
+            listItem.insertBefore(saveBtn, editBtn);
+          });
+          listItem.appendChild(editBtn);
+
+          // Delete button to remove this history entry
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "🗑️";
+          deleteBtn.title = "Delete";
+          deleteBtn.className = "btn btn-delete";
+          deleteBtn.style.marginLeft = "0.5rem";
+          deleteBtn.addEventListener("click", () => {
+            if (confirm("Delete this history entry?")) {
+              ev.history.splice(i, 1);
+              saveEvents();
+              // Refresh the modal by closing and reopening its view
+              document.body.removeChild(modalOverlay);
+              showHistory(index);
+            }
+          });
+          listItem.appendChild(deleteBtn);
+
+          list.appendChild(listItem);
+        });
+
+        modal.appendChild(list);
+        modalOverlay.appendChild(modal);
+        document.body.appendChild(modalOverlay);
       }
-
-      // Create modal overlay
-      const modalOverlay = document.createElement("div");
-      modalOverlay.id = "historyModalOverlay";
-      modalOverlay.style.position = "fixed";
-      modalOverlay.style.top = 0;
-      modalOverlay.style.left = 0;
-      modalOverlay.style.width = "100%";
-      modalOverlay.style.height = "100%";
-      modalOverlay.style.backgroundColor = "rgba(0,0,0,0.5)";
-      modalOverlay.style.display = "flex";
-      modalOverlay.style.alignItems = "center";
-      modalOverlay.style.justifyContent = "center";
-      modalOverlay.style.zIndex = 1000;
-
-      // Create modal container
-      const modal = document.createElement("div");
-      modal.id = "historyModal";
-      modal.style.backgroundColor = "#fff";
-      modal.style.padding = "1rem";
-      modal.style.borderRadius = "0.5rem";
-      modal.style.maxWidth = "90%";
-      modal.style.maxHeight = "80%";
-      modal.style.overflowY = "auto";
-
-      // Header with title and close button
-      const header = document.createElement("div");
-      header.style.display = "flex";
-      header.style.justifyContent = "space-between";
-      header.style.alignItems = "center";
-
-      const title = document.createElement("h3");
-      title.textContent = `History of '${ev.name}'`;
-      header.appendChild(title);
-
-      const closeButton = document.createElement("button");
-      closeButton.textContent = "X";
-      closeButton.className = "btn btn-delete";
-      closeButton.addEventListener("click", () => {
-        document.body.removeChild(modalOverlay);
-      });
-      header.appendChild(closeButton);
-      modal.appendChild(header);
-
-      // List container for history entries
-      const list = document.createElement("ul");
-      list.style.listStyle = "none";
-      list.style.padding = 0;
-
-      // Iterate through each history entry
-      ev.history.forEach((time, i) => {
-        const listItem = document.createElement("li");
-        listItem.style.marginBottom = "0.5rem";
-        listItem.style.display = "flex";
-        listItem.style.alignItems = "center";
-
-        // Timestamp display
-        const timestampSpan = document.createElement("span");
-        timestampSpan.textContent = new Date(time).toISOString() + " ";
-        listItem.appendChild(timestampSpan);
-
-        // Edit button to update the entry's time
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "✏️";
-        editBtn.title = "Edit";
-        editBtn.className = "btn btn-edit";
-        editBtn.style.marginLeft = "0.5rem";
-        editBtn.addEventListener("click", () => {
-        // Create an input for editing the datetime
-        const input = document.createElement("input");
-        input.type = "datetime-local";
-        let localDate = new Date(time);
-        let tzOffset = localDate.getTimezoneOffset() * 60000;
-        input.value = new Date(localDate - tzOffset)
-          .toISOString()
-          .slice(0, 16);
-        listItem.replaceChild(input, timestampSpan);
-
-        // Create a save button for the updated time
-        const saveBtn = document.createElement("button");
-        saveBtn.textContent = "Save";
-        saveBtn.className = "btn btn-edit";
-        saveBtn.style.marginLeft = "0.5rem";
-        saveBtn.addEventListener("click", () => {
-          const newTime = new Date(input.value).toISOString();
-          ev.history[i] = newTime;
-          saveEvents();
-          timestampSpan.textContent = newTime + " ";
-          listItem.replaceChild(timestampSpan, input);
-          listItem.removeChild(saveBtn);
-        });
-        listItem.insertBefore(saveBtn, editBtn);
-        });
-        listItem.appendChild(editBtn);
-
-        // Delete button to remove this history entry
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "🗑️";
-        deleteBtn.title = "Delete";
-        deleteBtn.className = "btn btn-delete";
-        deleteBtn.style.marginLeft = "0.5rem";
-        deleteBtn.addEventListener("click", () => {
-        if (confirm("Delete this history entry?")) {
-          ev.history.splice(i, 1);
-          saveEvents();
-          // Refresh the modal by closing and reopening its view
-          document.body.removeChild(modalOverlay);
-          showHistory(index);
-        }
-        });
-        listItem.appendChild(deleteBtn);
-
-        // Move up button
-        const moveUpBtn = document.createElement("button");
-        moveUpBtn.textContent = "↑";
-        moveUpBtn.title = "Move Up";
-        moveUpBtn.className = "btn btn-move-left";
-        moveUpBtn.style.marginLeft = "0.5rem";
-        moveUpBtn.addEventListener("click", () => {
-        if (i > 0) {
-          [ev.history[i], ev.history[i - 1]] = [
-            ev.history[i - 1],
-            ev.history[i],
-          ];
-          saveEvents();
-          document.body.removeChild(modalOverlay);
-          showHistory(index);
-        }
-        });
-        listItem.appendChild(moveUpBtn);
-
-        // Move down button
-        const moveDownBtn = document.createElement("button");
-        moveDownBtn.textContent = "↓";
-        moveDownBtn.title = "Move Down";
-        moveDownBtn.className = "btn btn-move-right";
-        moveDownBtn.style.marginLeft = "0.5rem";
-        moveDownBtn.addEventListener("click", () => {
-        if (i < ev.history.length - 1) {
-          [ev.history[i], ev.history[i + 1]] = [
-            ev.history[i + 1],
-            ev.history[i],
-          ];
-          saveEvents();
-          document.body.removeChild(modalOverlay);
-          showHistory(index);
-        }
-        });
-        listItem.appendChild(moveDownBtn);
-
-        list.appendChild(listItem);
-      });
-
-      // Add button to create a new history entry
-      const addButton = document.createElement("button");
-      addButton.textContent = "Add New Entry";
-      addButton.className = "btn btn-edit";
-      addButton.style.marginTop = "1rem";
-      addButton.addEventListener("click", () => {
-        const newTime = new Date().toISOString();
-        ev.history.push(newTime);
-        saveEvents();
-        document.body.removeChild(modalOverlay);
-        showHistory(index);
-      });
-
-      modal.appendChild(list);
-      modal.appendChild(addButton);
-      modalOverlay.appendChild(modal);
-      document.body.appendChild(modalOverlay);
-    }
 
       // Initial render on page load
       renderEvents();
