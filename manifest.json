@@ -2,7 +2,7 @@
   "name": "Days Since",
   "short_name": "Days Since",
   "description": "Track days since events last happened",
-  "start_url": "/",
+  "start_url": "/daysSince/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#007bff",
