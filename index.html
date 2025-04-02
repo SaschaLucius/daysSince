@@ -202,6 +202,62 @@
           font-size: 20px;
         }
       }
+
+      /* Add styles for history modal */
+      #historyModalOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      #historyModal {
+        background-color: #fff;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        max-width: 90%;
+        max-height: 80%;
+        overflow-y: auto;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+
+      #historyModal h3 {
+        margin: 0;
+        color: var(--text-color);
+      }
+
+      #historyModal ul {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+      }
+
+      #historyModal li {
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        background-color: var(--bg-color);
+      }
+
+      #historyModal input[type="datetime-local"] {
+        padding: 0.25rem;
+        border: 1px solid #ccc;
+        border-radius: 0.25rem;
+        font-size: 0.9rem;
+      }
+
+      #historyModal .btn {
+        margin: 0 0.25rem;
+        padding: 0.25rem 0.5rem;
+      }
     </style>
   </head>
   <body>
@@ -883,7 +939,9 @@
             input.value = new Date(localDate - tzOffset)
               .toISOString()
               .slice(0, 16);
-            listItem.replaceChild(input, timestampSpan);
+            
+            // Replace the timestamp span with the input
+            timestampSpan.parentNode.replaceChild(input, timestampSpan);
 
             // Create a save button for the updated time
             const saveBtn = document.createElement("button");
@@ -896,8 +954,8 @@
               ev.history[i] = newTime;
               saveEvents();
               timestampSpan.textContent = newTime + " ";
-              listItem.replaceChild(timestampSpan, input);
-              listItem.removeChild(saveBtn);
+              input.parentNode.replaceChild(timestampSpan, input);
+              saveBtn.remove();
               // Add back the edit button
               const newEditBtn = document.createElement("button");
               newEditBtn.textContent = "✏️";
@@ -905,13 +963,13 @@
               newEditBtn.className = "btn btn-edit";
               newEditBtn.style.marginLeft = "0.5rem";
               newEditBtn.addEventListener("click", createEditHandler(newTime, timestampSpan, i, listItem, deleteBtn, newEditBtn));
-              listItem.insertBefore(newEditBtn, deleteBtn);
+              deleteBtn.parentNode.insertBefore(newEditBtn, deleteBtn);
               // Update all days differences
               updateAllDaysDifferences();
             });
-            listItem.insertBefore(saveBtn, deleteBtn);
+            deleteBtn.parentNode.insertBefore(saveBtn, deleteBtn);
             // Remove the edit button while editing
-            listItem.removeChild(currentEditBtn);
+            currentEditBtn.remove();
           };
         }
 
@@ -923,27 +981,43 @@
           listItem.style.marginBottom = "0.5rem";
           listItem.style.display = "flex";
           listItem.style.alignItems = "center";
+          listItem.style.justifyContent = "space-between";
+          listItem.style.padding = "0.5rem";
+          listItem.style.borderRadius = "0.25rem";
+          listItem.style.backgroundColor = "var(--bg-color)";
 
-          // Timestamp display
+          // Left section for timestamp
+          const leftSection = document.createElement("div");
+          leftSection.style.flex = "0 0 auto";
+          leftSection.style.minWidth = "200px";
           const timestampSpan = document.createElement("span");
           timestampSpan.textContent = new Date(time).toISOString() + " ";
-          listItem.appendChild(timestampSpan);
+          leftSection.appendChild(timestampSpan);
+          listItem.appendChild(leftSection);
 
-          // Add days difference display
+          // Middle section for days difference
+          const middleSection = document.createElement("div");
+          middleSection.style.flex = "1";
+          middleSection.style.textAlign = "center";
           const daysDiffSpan = document.createElement("span");
-          daysDiffSpan.style.marginLeft = "0.5rem";
           daysDiffSpan.style.color = "#666";
           // Calculate the actual index in the original array for correct days difference
           const originalIndex = ev.history.length - 1 - i;
           updateDaysDifference(daysDiffSpan, time, originalIndex, ev.history);
-          listItem.appendChild(daysDiffSpan);
+          middleSection.appendChild(daysDiffSpan);
+          listItem.appendChild(middleSection);
+
+          // Right section for buttons
+          const rightSection = document.createElement("div");
+          rightSection.style.flex = "0 0 auto";
+          rightSection.style.display = "flex";
+          rightSection.style.gap = "0.5rem";
 
           // Delete button to remove this history entry
           const deleteBtn = document.createElement("button");
           deleteBtn.textContent = "🗑️";
           deleteBtn.title = "Delete";
           deleteBtn.className = "btn btn-delete";
-          deleteBtn.style.marginLeft = "0.5rem";
           deleteBtn.addEventListener("click", () => {
             if (confirm("Delete this history entry?")) {
               ev.history.splice(originalIndex, 1);
@@ -959,12 +1033,13 @@
           editBtn.textContent = "✏️";
           editBtn.title = "Edit";
           editBtn.className = "btn btn-edit";
-          editBtn.style.marginLeft = "0.5rem";
           editBtn.addEventListener("click", createEditHandler(time, timestampSpan, originalIndex, listItem, deleteBtn, editBtn));
 
-          // Append buttons in order
-          listItem.appendChild(editBtn);
-          listItem.appendChild(deleteBtn);
+          // Append buttons to right section
+          rightSection.appendChild(editBtn);
+          rightSection.appendChild(deleteBtn);
+          listItem.appendChild(rightSection);
+
           list.appendChild(listItem);
         });
 
