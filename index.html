@@ -350,25 +350,44 @@
         return iso.slice(0, 16) + "Z"; // returns "2025-03-17T12:34Z"
       }
 
+      // Helper function to ensure an event has a history array
+      function ensureEventHistory(ev) {
+        if (!ev.history) {
+          // If there's a last property, use it as the first history entry
+          if (ev.last) {
+            ev.history = [ev.last];
+            delete ev.last; // Remove the old last property
+          } else {
+            // If no last property, use current time
+            ev.history = [new Date().toISOString()];
+          }
+        }
+        return ev;
+      }
+
       // Updated renderEvents: if the sort checkbox is checked, display events sorted by last (oldest first)
       // Updated renderEvents: add pulsating border if max is set and reached
       function renderEvents() {
         const eventGrid = document.getElementById("eventGrid");
         eventGrid.innerHTML = "";
 
+        // Ensure all events have a history array
+        events = events.map(ensureEventHistory);
+
         // Build a list of events with their original index
         let displayEvents = events.map((ev, i) => ({ ev, index: i }));
         const sortCheckbox = document.getElementById("sortOldest");
         if (sortCheckbox && sortCheckbox.checked) {
           displayEvents.sort(
-            (a, b) => new Date(a.ev.last) - new Date(b.ev.last)
+            (a, b) => new Date(a.ev.history[a.ev.history.length - 1]) - new Date(b.ev.history[b.ev.history.length - 1])
           );
         }
 
         displayEvents.forEach((item) => {
           const ev = item.ev;
           const originalIndex = item.index;
-          const dayCount = daysSince(ev.last);
+          const lastTime = ev.history[ev.history.length - 1];
+          const dayCount = daysSince(lastTime);
           const box = document.createElement("div");
           box.className = "event-box";
           const bg = ev.bg || "#f9f9f9";
@@ -498,7 +517,6 @@
         const now = new Date().toISOString();
         events.push({
           name: eventName,
-          last: now,
           history: [now], // Store creation time as the first history entry
         });
         saveEvents();
@@ -510,10 +528,9 @@
       function refreshEvent(index) {
         const ev = events[index];
         if (!ev.history) ev.history = [];
-        // Save current 'last' timestamp into history
-        ev.history.push(ev.last);
         // Update to current time
-        ev.last = new Date().toISOString();
+        const now = new Date().toISOString();
+        ev.history.push(now);
         saveEvents();
         renderEvents();
       }
@@ -526,8 +543,6 @@
       }
 
       // In editEvent, add a color input for background and store it in the event object
-      // Updated editEvent: add input for alert days
-      // In editEvent, warn if another element is currently being edited
       function editEvent(index) {
         if (editingIndex !== null && editingIndex !== index) {
           alert("Finish editing the current element before editing another.");
@@ -549,15 +564,16 @@
           const newMinAlert = minAlertInput.value.trim();
           if (newName && newDatetime) {
             const newTimeISO = new Date(newDatetime).toISOString();
-            if (newTimeISO !== ev.last) {
+            const lastTime = ev.history[ev.history.length - 1];
+            if (newTimeISO !== lastTime) {
               const addToHistory = confirm(
                 "The time has changed. Click OK to add the previous time as a history entry, or Cancel to just update the time."
               );
               if (addToHistory) {
                 if (!ev.history) ev.history = [];
-                ev.history.push(ev.last);
+                ev.history.push(lastTime);
               }
-              ev.last = newTimeISO;
+              ev.history[ev.history.length - 1] = newTimeISO;
             }
             ev.name = newName;
             ev.bg = newbg;
@@ -577,7 +593,7 @@
 
         const dateInput = document.createElement("input");
         dateInput.type = "datetime-local";
-        let localDate = new Date(ev.last);
+        let localDate = new Date(ev.history[ev.history.length - 1]);
         let tzOffset = localDate.getTimezoneOffset() * 60000;
         let localISO = new Date(localDate - tzOffset)
           .toISOString()
@@ -655,8 +671,8 @@
         const params = new URLSearchParams();
         params.set("dsEvent", "1");
         params.set("name", ev.name);
-        // Use the truncated timestamp
-        params.set("last", truncateTimestamp(ev.last));
+        // Use the truncated timestamp from the most recent history entry
+        params.set("last", truncateTimestamp(ev.history[ev.history.length - 1]));
         if (ev.bg !== undefined) {
           params.set("bg", ev.bg);
         }
@@ -696,14 +712,14 @@
             last &&
             confirm(`Do you want to import the event "${name}"?`)
           ) {
-            events.push({
+            const newEvent = {
               name: name,
-              last: new Date(last).toISOString(),
-              bg: bg,
+              history: [last],
               bg: bg ? bg : undefined,
               max: max ? parseInt(max) : undefined,
               min: min ? parseInt(min) : undefined,
-            });
+            };
+            events.push(newEvent);
             saveEvents();
             renderEvents();
             // Remove query parameters from the URL without reloading the page
@@ -713,16 +729,15 @@
       }
 
       // New function: Copy share link for all events to the clipboard.
-      // It serializes all events as JSON and appends them as query parameter `dsEvents`.
       function shareAllEvents() {
         if (events.length === 0) {
           alert("No events to share.");
           return;
         }
         // Build a new array excluding the history property
-        const eventsForSharing = events.map(({ name, last, bg, max, min }) => ({
+        const eventsForSharing = events.map(({ name, history, bg, max, min }) => ({
           name,
-          last: truncateTimestamp(last),
+          last: truncateTimestamp(history[history.length - 1]),
           bg,
           max,
           min,
@@ -770,8 +785,16 @@
                 }?`
               )
             ) {
+              // Convert imported events to use history array
+              const convertedEvents = importedEvents.map(event => ({
+                name: event.name,
+                history: [event.last],
+                bg: event.bg,
+                max: event.max,
+                min: event.min
+              }));
               // Append imported events to existing events
-              events = events.concat(importedEvents);
+              events = events.concat(convertedEvents);
               saveEvents();
               renderEvents();
               // Remove query parameters from the URL without reloading the page
@@ -805,7 +828,6 @@
               // Add the new random event
               events.push({
                 name: randomName,
-                last: randomDate.toISOString(),
                 history: [randomDate.toISOString()],
                 bg: randomBg,
               });
@@ -888,13 +910,32 @@
         title.textContent = `History of '${ev.name}'`;
         header.appendChild(title);
 
+        // Add clock button for adding new entries
+        const addButton = document.createElement("button");
+        addButton.textContent = "⏰";
+        addButton.title = "Add new entry";
+        addButton.className = "btn btn-refresh";
+        addButton.style.marginRight = "0.5rem";
+        addButton.addEventListener("click", () => {
+          const now = new Date().toISOString();
+          ev.history.push(now);
+          saveEvents();
+          // Refresh the modal by closing and reopening its view
+          document.body.removeChild(modalOverlay);
+          showHistory(index);
+        });
+
         const closeButton = document.createElement("button");
         closeButton.textContent = "X";
         closeButton.className = "btn btn-delete";
         closeButton.addEventListener("click", () => {
           document.body.removeChild(modalOverlay);
         });
+
+        // Add both buttons to the header
+        header.appendChild(addButton);
         header.appendChild(closeButton);
+
         modal.appendChild(header);
 
         // List container for history entries
@@ -966,6 +1007,10 @@
               deleteBtn.parentNode.insertBefore(newEditBtn, deleteBtn);
               // Update all days differences
               updateAllDaysDifferences();
+              // If this was the most recent entry, re-render the main page
+              if (i === ev.history.length - 1) {
+                renderEvents();
+              }
             });
             deleteBtn.parentNode.insertBefore(saveBtn, deleteBtn);
             // Remove the edit button while editing
@@ -1018,15 +1063,22 @@
           deleteBtn.textContent = "🗑️";
           deleteBtn.title = "Delete";
           deleteBtn.className = "btn btn-delete";
-          deleteBtn.addEventListener("click", () => {
-            if (confirm("Delete this history entry?")) {
-              ev.history.splice(originalIndex, 1);
-              saveEvents();
-              // Refresh the modal by closing and reopening its view
-              document.body.removeChild(modalOverlay);
-              showHistory(index);
-            }
-          });
+          // Only allow deletion if there is more than one entry
+          if (ev.history.length > 1) {
+            deleteBtn.addEventListener("click", () => {
+              if (confirm("Delete this history entry?")) {
+                ev.history.splice(originalIndex, 1);
+                saveEvents();
+                // Refresh the modal by closing and reopening its view
+                document.body.removeChild(modalOverlay);
+                showHistory(index);
+              }
+            });
+          } else {
+            deleteBtn.disabled = true;
+            deleteBtn.style.opacity = "0.5";
+            deleteBtn.title = "Cannot delete the last entry";
+          }
 
           // Edit button to update the entry's time
           const editBtn = document.createElement("button");
