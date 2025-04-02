@@ -846,25 +846,9 @@
         list.style.listStyle = "none";
         list.style.padding = 0;
 
-        // Iterate through each history entry
-        ev.history.forEach((time, i) => {
-          const listItem = document.createElement("li");
-          listItem.style.marginBottom = "0.5rem";
-          listItem.style.display = "flex";
-          listItem.style.alignItems = "center";
-
-          // Timestamp display
-          const timestampSpan = document.createElement("span");
-          timestampSpan.textContent = new Date(time).toISOString() + " ";
-          listItem.appendChild(timestampSpan);
-
-          // Edit button to update the entry's time
-          const editBtn = document.createElement("button");
-          editBtn.textContent = "✏️";
-          editBtn.title = "Edit";
-          editBtn.className = "btn btn-edit";
-          editBtn.style.marginLeft = "0.5rem";
-          editBtn.addEventListener("click", () => {
+        // Function to create the edit handler
+        function createEditHandler(time, timestampSpan, i, listItem, deleteBtn, currentEditBtn) {
+          return () => {
             // Create an input for editing the datetime
             const input = document.createElement("input");
             input.type = "datetime-local";
@@ -877,7 +861,8 @@
 
             // Create a save button for the updated time
             const saveBtn = document.createElement("button");
-            saveBtn.textContent = "Save";
+            saveBtn.textContent = "💾";
+            saveBtn.title = "Save";
             saveBtn.className = "btn btn-edit";
             saveBtn.style.marginLeft = "0.5rem";
             saveBtn.addEventListener("click", () => {
@@ -887,10 +872,32 @@
               timestampSpan.textContent = newTime + " ";
               listItem.replaceChild(timestampSpan, input);
               listItem.removeChild(saveBtn);
+              // Add back the edit button
+              const newEditBtn = document.createElement("button");
+              newEditBtn.textContent = "✏️";
+              newEditBtn.title = "Edit";
+              newEditBtn.className = "btn btn-edit";
+              newEditBtn.style.marginLeft = "0.5rem";
+              newEditBtn.addEventListener("click", createEditHandler(newTime, timestampSpan, i, listItem, deleteBtn, newEditBtn));
+              listItem.insertBefore(newEditBtn, deleteBtn);
             });
-            listItem.insertBefore(saveBtn, editBtn);
-          });
-          listItem.appendChild(editBtn);
+            listItem.insertBefore(saveBtn, deleteBtn);
+            // Remove the edit button while editing
+            listItem.removeChild(currentEditBtn);
+          };
+        }
+
+        // Iterate through each history entry
+        ev.history.forEach((time, i) => {
+          const listItem = document.createElement("li");
+          listItem.style.marginBottom = "0.5rem";
+          listItem.style.display = "flex";
+          listItem.style.alignItems = "center";
+
+          // Timestamp display
+          const timestampSpan = document.createElement("span");
+          timestampSpan.textContent = new Date(time).toISOString() + " ";
+          listItem.appendChild(timestampSpan);
 
           // Delete button to remove this history entry
           const deleteBtn = document.createElement("button");
@@ -907,8 +914,18 @@
               showHistory(index);
             }
           });
-          listItem.appendChild(deleteBtn);
 
+          // Edit button to update the entry's time
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "✏️";
+          editBtn.title = "Edit";
+          editBtn.className = "btn btn-edit";
+          editBtn.style.marginLeft = "0.5rem";
+          editBtn.addEventListener("click", createEditHandler(time, timestampSpan, i, listItem, deleteBtn, editBtn));
+
+          // Append buttons in order
+          listItem.appendChild(editBtn);
+          listItem.appendChild(deleteBtn);
           list.appendChild(listItem);
         });
 
