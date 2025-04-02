@@ -846,6 +846,32 @@
         list.style.listStyle = "none";
         list.style.padding = 0;
 
+        // Function to update days difference display
+        function updateDaysDifference(daysDiffSpan, time, i, history) {
+          if (i < history.length - 1) {
+            const nextTime = new Date(history[i + 1]);
+            const currentTime = new Date(time);
+            const diffInDays = Math.floor((nextTime - currentTime) / (1000 * 60 * 60 * 24));
+            daysDiffSpan.textContent = `(${diffInDays} day${diffInDays !== 1 ? 's' : ''} until next)`;
+          } else {
+            const currentTime = new Date(time);
+            const now = new Date();
+            const diffInDays = Math.floor((now - currentTime) / (1000 * 60 * 60 * 24));
+            daysDiffSpan.textContent = `(${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago)`;
+          }
+        }
+
+        // Function to update all days differences
+        function updateAllDaysDifferences() {
+          const listItems = list.children;
+          for (let i = 0; i < listItems.length; i++) {
+            const listItem = listItems[i];
+            const timestampSpan = listItem.firstChild;
+            const daysDiffSpan = timestampSpan.nextSibling;
+            updateDaysDifference(daysDiffSpan, ev.history[i], i, ev.history);
+          }
+        }
+
         // Function to create the edit handler
         function createEditHandler(time, timestampSpan, i, listItem, deleteBtn, currentEditBtn) {
           return () => {
@@ -880,6 +906,8 @@
               newEditBtn.style.marginLeft = "0.5rem";
               newEditBtn.addEventListener("click", createEditHandler(newTime, timestampSpan, i, listItem, deleteBtn, newEditBtn));
               listItem.insertBefore(newEditBtn, deleteBtn);
+              // Update all days differences
+              updateAllDaysDifferences();
             });
             listItem.insertBefore(saveBtn, deleteBtn);
             // Remove the edit button while editing
@@ -888,7 +916,9 @@
         }
 
         // Iterate through each history entry
-        ev.history.forEach((time, i) => {
+        // Create a reversed copy of the history array to show most recent first
+        const reversedHistory = [...ev.history].reverse();
+        reversedHistory.forEach((time, i) => {
           const listItem = document.createElement("li");
           listItem.style.marginBottom = "0.5rem";
           listItem.style.display = "flex";
@@ -899,6 +929,15 @@
           timestampSpan.textContent = new Date(time).toISOString() + " ";
           listItem.appendChild(timestampSpan);
 
+          // Add days difference display
+          const daysDiffSpan = document.createElement("span");
+          daysDiffSpan.style.marginLeft = "0.5rem";
+          daysDiffSpan.style.color = "#666";
+          // Calculate the actual index in the original array for correct days difference
+          const originalIndex = ev.history.length - 1 - i;
+          updateDaysDifference(daysDiffSpan, time, originalIndex, ev.history);
+          listItem.appendChild(daysDiffSpan);
+
           // Delete button to remove this history entry
           const deleteBtn = document.createElement("button");
           deleteBtn.textContent = "🗑️";
@@ -907,7 +946,7 @@
           deleteBtn.style.marginLeft = "0.5rem";
           deleteBtn.addEventListener("click", () => {
             if (confirm("Delete this history entry?")) {
-              ev.history.splice(i, 1);
+              ev.history.splice(originalIndex, 1);
               saveEvents();
               // Refresh the modal by closing and reopening its view
               document.body.removeChild(modalOverlay);
@@ -921,7 +960,7 @@
           editBtn.title = "Edit";
           editBtn.className = "btn btn-edit";
           editBtn.style.marginLeft = "0.5rem";
-          editBtn.addEventListener("click", createEditHandler(time, timestampSpan, i, listItem, deleteBtn, editBtn));
+          editBtn.addEventListener("click", createEditHandler(time, timestampSpan, originalIndex, listItem, deleteBtn, editBtn));
 
           // Append buttons in order
           listItem.appendChild(editBtn);
