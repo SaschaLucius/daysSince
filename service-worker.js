@@ -1,6 +1,7 @@
 const CACHE_NAME = 'days-since-cache-v1';
 const ASSETS_TO_CACHE = [
   './',
+  './favicon.ico',
   './index.html',
   './manifest.json',
   './icon-192x192.svg',
