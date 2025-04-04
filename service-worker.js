@@ -1,11 +1,11 @@
 const CACHE_NAME = 'days-since-cache-v1';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192x192.svg',
-  '/icon-512x512.svg',
-  '/offline.html',
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192x192.svg',
+  './icon-512x512.svg',
+  './offline.html',
   'https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js'
 ];
 
@@ -70,7 +70,7 @@ self.addEventListener('fetch', event => {
           .catch(error => {
             // If both cache and network fail, show offline page
             console.log('Fetch failed; returning offline page instead.', error);
-            return caches.match('/offline.html');
+            return caches.match('./offline.html');
           });
       })
   );
